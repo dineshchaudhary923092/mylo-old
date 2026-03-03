@@ -1,6 +1,7 @@
 import React, { useState, useContext, useEffect } from 'react';
-import { Text, View, TextInput, ActivityIndicator, TouchableOpacity, KeyboardAvoidingView, ScrollView } from 'react-native';
+import { Text, View, TextInput, ActivityIndicator, TouchableOpacity, Dimensions } from 'react-native';
 import StatusBarComponent from '../Components/StatusbarComponent';
+import { Colors } from '../Constants/Colors';
 import SimpleLineIcons from 'react-native-vector-icons/SimpleLineIcons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
@@ -13,7 +14,7 @@ import { useTheme } from '@react-navigation/native';
 import EStyleSheet from 'react-native-extended-stylesheet';
 import { getDeviceType } from 'react-native-device-info';
 import { KeyboardAwareScrollView } from '@codler/react-native-keyboard-aware-scroll-view';
-import AsyncStorage from '@react-native-community/async-storage';
+import * as Animatable from 'react-native-animatable';
 
 let deviceType = getDeviceType();
 
@@ -34,47 +35,20 @@ const LoginScreen = ({ navigation }) => {
         secureTextEntry: true,
     });
 
-    useEffect(() => {
-        if(responseType === 'login') {
-            if(responseData.error === 1) {
-                login(responseData);
-            } else {
-                setResponse(false);
-            }
-            setButtonDisabled(false);
-        }
-    }, [responseData]);
-
     const usernameInputChange = (value) => {
-        if (value.length >= 6){
-            setData({
-                ...data,
-                username: value,
-                isUserValid: true
-            })
-        }
-        else{
-            setData({
-                ...data,
-                isUserValid: false
-            })
-        }
+        setData({
+            ...data,
+            username: value,
+            isUserValid: value.length >= 4
+        })
 	}
     
     const passwordInputChange = (value) => {
-        if (value.length >= 8){
-            setData({
-                ...data,
-                password: value,
-                isPasswordValid: true
-            })
-        }
-        else{
-            setData({
-                ...data,
-                isPasswordValid: false
-            })
-        }
+        setData({
+            ...data,
+            password: value,
+            isPasswordValid: value.length >= 6
+        })
     }
     
     const handleSecureTextEntry = () => {
@@ -84,202 +58,116 @@ const LoginScreen = ({ navigation }) => {
 		})
     }
     
-    const loginHandle = async(username, password, latitude, longitude) => {
-        login({
-            error: 1,
-            token: 'dummy-token',
-            data: {
-                user: {
-                    id: 1,
-                    username: 'dummy',
-                    first_name: 'Dummy',
-                    last_name: 'User',
-                    device_type: 'ios',
-                    status: 'active'
+    const loginHandle = async() => {
+        setButtonDisabled(true);
+        setTimeout(() => {
+            login({
+                error: 1,
+                token: 'dummy-token',
+                data: {
+                    user: {
+                        id: 1,
+                        username: data.username,
+                        first_name: 'Showcase',
+                        last_name: 'User',
+                        device_type: 'ios',
+                        status: 'active'
+                    }
                 }
-            }
-        });
+            });
+            setButtonDisabled(false);
+        }, 1000);
     }
 
     return (
-        <View style={{flex: 1}}>
+        <View style={{flex: 1, backgroundColor: colors.background}}>
             <StatusBarComponent bgColor={colors.background} barStyle={theme.dark ? 'light' : 'dark'} />
             <KeyboardAwareScrollView 
-                style={[styles.ContainerStyle, {backgroundColor: colors.background}]} 
+                style={styles.ContainerStyle} 
                 keyboardShouldPersistTaps='always'
                 enableOnAndroid={true}
-                enableAutomaticScroll={true}
+                contentContainerStyle={{flexGrow: 1}}
             >
-                <View style={{paddingVertical: 30}}>
-                    <View>
-                        <Text style={[styles.TextLg, {color: colors.pText}]}>Welcome Back,</Text>
-                        <Text style={[styles.TextSm, {color: colors.text}]}>Sign in to continue</Text>
-                    </View>
+                <Animatable.View animation="fadeIn" duration={1000} style={styles.InnerContainer}>
+                    <Animatable.View animation="fadeInDown" delay={200}>
+                        <Text style={[styles.TextLg, {color: colors.text}]}>Hello Again!</Text>
+                        <Text style={[styles.TextSm, {color: colors.light}]}>Sign in to your account to continue</Text>
+                    </Animatable.View>
+
                     <View style={styles.FormContainer}>
-                        <View style={styles.FormInputStyle}>
-                            <Text style={[styles.FormInputLabelStyle, {color: colors.pText}]}>Username</Text>
-                            <View style={[styles.FormInputFieldStyle, {borderColor: theme.dark ? colors.primary : colors.light}]}>
-                                <SimpleLineIcons 
-                                    name="user" 
-                                    size={
-                                        deviceType === 'Tablet' ? 
-                                        EStyleSheet.value('10rem') :
-                                        EStyleSheet.value('16rem')
-                                    } 
-                                    color={colors.pText} 
-                                    style={{
-                                        width: deviceType === 'Tablet' ? 
-                                        EStyleSheet.value('16rem') :
-                                        EStyleSheet.value('25rem'),  
-                                        alignSelf: 'center'
-                                    }} 
-                                />
+                        <Animatable.View animation="fadeInUp" delay={400} style={styles.FormInputStyle}>
+                            <Text style={[styles.FormInputLabelStyle, {color: colors.text}]}>Email or Username</Text>
+                            <View style={[styles.FormInputFieldStyle, {backgroundColor: colors.bgVar, borderColor: data.isUserValid ? colors.lighter : '#ff4444'}]}>
+                                <SimpleLineIcons name="user" size={18} color={colors.pText} style={styles.IconStyle} />
                                 <TextInput
                                     autoCapitalize='none'
                                     autoCorrect={false}
-                                    style={[styles.FormTextInputStyle, {color: colors.pText}]}
-                                    placeholder="username"
+                                    style={[styles.FormTextInputStyle, {color: colors.text}]}
+                                    placeholder="Enter username"
                                     placeholderTextColor={colors.light}
                                     keyboardAppearance="dark"
                                     onChangeText={(value) => usernameInputChange(value)}
                                 />
-                                {
-                                    data.isUserValid ? 
-                                    <View
-                                        style={{alignSelf: 'center'}}
-                                    >
-                                            <Octicons 
-                                                name="verified" 
-                                                size={
-                                                    deviceType === 'Tablet' ? 
-                                                    EStyleSheet.value('10rem') :
-                                                    EStyleSheet.value('15rem')
-                                                } 
-                                                color={colors.pText}
-                                            />
-                                    </View>
-                                    : null
-                                }
+                                {data.isUserValid && data.username.length > 0 && (
+                                    <Octicons name="verified" size={15} color={colors.primary} style={{alignSelf: 'center'}} />
+                                )}
                             </View>
-                            {
-                                data.isUserValid ? null :
-                                <Text style={[styles.errorText, {color: colors.text}]}>Please enter valid email/phone number</Text>
-                            }
-                        </View>
-                        <View style={[styles.FormInputStyle, {marginBottom: 10}]}>
-                            <Text style={[styles.FormInputLabelStyle, {color: colors.pText}]}>Password</Text>
-                            <View style={[styles.FormInputFieldStyle, {borderColor: theme.dark ? colors.primary : colors.light}]}>
-                                <MaterialIcons 
-                                    name="lock-outline" 
-                                    size={
-                                        deviceType === 'Tablet' ? 
-                                        EStyleSheet.value('12rem') :
-                                        EStyleSheet.value('18rem')
-                                    } 
-                                    color={colors.pText} 
-                                    style={{
-                                        width: deviceType === 'Tablet' ? 
-                                        EStyleSheet.value('18rem') :
-                                        EStyleSheet.value('25rem'), 
-                                        alignSelf: 'center'
-                                    }} 
-                                />
+                        </Animatable.View>
+
+                        <Animatable.View animation="fadeInUp" delay={600} style={styles.FormInputStyle}>
+                            <Text style={[styles.FormInputLabelStyle, {color: colors.text}]}>Password</Text>
+                            <View style={[styles.FormInputFieldStyle, {backgroundColor: colors.bgVar, borderColor: data.isPasswordValid ? colors.lighter : '#ff4444'}]}>
+                                <MaterialIcons name="lock-outline" size={20} color={colors.pText} style={styles.IconStyle} />
                                 <TextInput
                                     autoCapitalize='none'
                                     autoCorrect={false}
                                     secureTextEntry={data.secureTextEntry}
-                                    style={[styles.FormTextInputStyle, {color: colors.pText}]}
+                                    style={[styles.FormTextInputStyle, {color: colors.text}]}
                                     keyboardAppearance="dark"
                                     placeholderTextColor={colors.light}
-                                    placeholder="password"
+                                    placeholder="Enter password"
                                     onChangeText={(value) => passwordInputChange(value)}
                                 />
-                                <TouchableOpacity 
-                                    style={{
-                                        justifyContent: 'center', 
-                                        width: EStyleSheet.value('30rem'), 
-                                        height: deviceType === 'Tablet' ? EStyleSheet.value('26rem') : EStyleSheet.value('40rem')
-                                    }}
-                                    onPress={() => handleSecureTextEntry()}
-                                >
-                                    {
-                                        data.secureTextEntry ?
-                                        <View
-                                            style={{alignSelf: 'flex-end'}}
-                                        >
-                                            <MaterialCommunityIcons 
-                                                name="eye-off" 
-                                                size={
-                                                    deviceType === 'Tablet' ? 
-                                                    EStyleSheet.value('11rem') :
-                                                    EStyleSheet.value('16rem')
-                                                } 
-                                                color={colors.pText} 
-                                            />
-                                        </View> 
-                                        :
-                                        <View
-                                            style={{alignSelf: 'flex-end'}}
-                                        >
-                                            <MaterialCommunityIcons 
-                                                name="eye" 
-                                                size={
-                                                    deviceType === 'Tablet' ? 
-                                                    EStyleSheet.value('11rem') :
-                                                    EStyleSheet.value('16rem')
-                                                } 
-                                                color={colors.pText} 
-                                            /> 
-                                        </View>
-                                    }
+                                <TouchableOpacity onPress={handleSecureTextEntry} style={styles.EyeStyle}>
+                                    <MaterialCommunityIcons 
+                                        name={data.secureTextEntry ? "eye-off" : "eye"} 
+                                        size={20} 
+                                        color={colors.pText} 
+                                    />
                                 </TouchableOpacity>
                             </View>
-                            {
-                                data.isPasswordValid ? null :
-                                <Text style={[styles.errorText, {color: colors.text}]}>Please enter valid password</Text>
-                            }
-                        </View>
-                        <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')}>
-                            <Text style={[styles.ForgotStyle, {color: colors.light,}]}>Forgot Password?</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity 
-                            style={[styles.SubmitContainer, {backgroundColor: colors.primary}]}
-                            onPress={() => {
-                                setButtonDisabled(true);
-                                loginHandle(data.username, data.password, latitude, longitude)
-                            }}
-                            disabled={buttonDisabled}
-                        >
-                            {
-                                buttonDisabled ?
-                                <ActivityIndicator color={colors.black} /> :
-                                <AntDesign 
-                                    name='arrowright' 
-                                    size={
-                                        deviceType === 'Tablet' ? 
-                                        EStyleSheet.value('14rem') :
-                                        EStyleSheet.value('24rem')
-                                    } 
-                                    color={colors.black} 
-                                />
-                            }
-                        </TouchableOpacity>
+                            <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')} style={{alignSelf: 'flex-end', marginTop: 10}}>
+                                <Text style={[styles.ForgotStyle, {color: colors.primary}]}>Forgot Password?</Text>
+                            </TouchableOpacity>
+                        </Animatable.View>
+
+                        <Animatable.View animation="fadeInUp" delay={800} style={{marginTop: 20}}>
+                            <TouchableOpacity 
+                                activeOpacity={0.8}
+                                style={[styles.SubmitBtn, {backgroundColor: colors.primary}]}
+                                onPress={loginHandle}
+                                disabled={buttonDisabled}
+                            >
+                                {buttonDisabled ? (
+                                    <ActivityIndicator color={Colors.dark} />
+                                ) : (
+                                    <View style={styles.SubmitBtnInner}>
+                                        <Text style={[styles.SubmitBtnText, {color: Colors.dark}]}>Sign In</Text>
+                                        <AntDesign name="arrowright" size={20} color={Colors.dark} />
+                                    </View>
+                                )}
+                            </TouchableOpacity>
+                        </Animatable.View>
                     </View>
-                    <TouchableOpacity 
-                        style={styles.SignUpButton}
-                        onPress={() => navigation.navigate('SignUp', {
-                            latitude: latitude,
-                            longitude: longitude
-                        })}
-                    >
-                        <Text style={[styles.SignUpButtonText, {color: colors.pText}]}>
-                            Don't have an account?
-                        </Text>
-                        <Text style={[styles.SignUpButtonText, styles.SignUpButtonTextBold, {color: colors.pText}]}>
-                            SignUp
-                        </Text>
-                    </TouchableOpacity>
-                </View>
+
+                    <Animatable.View animation="fadeInUp" delay={1000} style={styles.SignUpArea}>
+                        <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
+                            <Text style={[styles.SignUpButtonText, {color: colors.text}]}>
+                                New here? <Text style={{fontFamily: 'GTWalsheimProBold', color: colors.primary}}>Create Account</Text>
+                            </Text>
+                        </TouchableOpacity>
+                    </Animatable.View>
+                </Animatable.View>
             </KeyboardAwareScrollView>
         </View>
     )
@@ -288,81 +176,87 @@ const LoginScreen = ({ navigation }) => {
 const styles = EStyleSheet.create({
     ContainerStyle: {
         flex: 1,
-        paddingHorizontal: '5%',
-        paddingVertical: '5%',
-        width: '100%',
-        minHeight: '100%',
-        maxWidth: deviceType === 'Tablet' ? '75%' : '100%',
-        alignSelf: 'center'
+    },
+    InnerContainer: {
+        paddingHorizontal: '25rem',
+        paddingVertical: '60rem',
+        justifyContent: 'center',
     },
     TextLg: {
-        fontSize: deviceType === 'Tablet' ? '24rem' : '35rem',
-        fontFamily: 'GTWalsheimProMedium',
-        paddingBottom: deviceType === 'Tablet' ? '4rem' : '6rem',
+        fontSize: '32rem',
+        fontFamily: 'GTWalsheimProBold',
+        marginBottom: '6rem',
     },
     TextSm: {
-        fontSize: deviceType === 'Tablet' ? '9rem' : '14rem',
+        fontSize: '15rem',
         fontFamily: 'GTWalsheimProLight',
+        marginBottom: '40rem',
     },
     FormContainer: {
-        marginTop: deviceType === 'Tablet' ? '14rem' : '20rem',
+        width: '100%',
     },
     FormInputStyle: {
-		marginBottom: deviceType === 'Tablet' ? '8rem' : '10rem'
+		marginBottom: '20rem',
 	},
 	FormInputLabelStyle: {
-		fontSize: deviceType === 'Tablet' ? '11rem' : '16rem',
-		fontFamily: 'GTWalsheimProLight',
-        paddingBottom: deviceType === 'Tablet' ? '6rem' : '10rem'
+		fontSize: '14rem',
+		fontFamily: 'GTWalsheimProMedium',
+        marginBottom: '10rem',
+        opacity: 0.9,
 	},
 	FormInputFieldStyle: {
 		flexDirection: 'row',
 		borderWidth: '1rem',
-        height: deviceType === 'Tablet' ? '26rem' : '40rem',
-        borderRadius: deviceType === 'Tablet' ? '13rem' : '25rem',
-        paddingHorizontal: deviceType === 'Tablet' ? '9rem' : '14rem',
+        height: '52rem',
+        borderRadius: '14rem',
+        paddingHorizontal: '15rem',
+        alignItems: 'center',
 	},
 	FormTextInputStyle: {
         flex: 1,
-        height: deviceType === 'Tablet' ? '26rem' : '40rem',
-        fontSize: deviceType === 'Tablet' ? '9rem' : '13rem',
-        paddingLeft: deviceType === 'Tablet' ? '4rem' : 0,
+        height: '100%',
+        fontSize: '15rem',
+        fontFamily: 'GTWalsheimProRegular',
     },
-    SubmitContainer: {
-        height: deviceType === 'Tablet' ? '26rem' : '40rem',
-        width: deviceType === 'Tablet' ? '26rem' : '40rem',
-        borderRadius: deviceType === 'Tablet' ? '13rem' : '25rem',
+    IconStyle: {
+        marginRight: '12rem',
+        opacity: 0.7
+    },
+    EyeStyle: {
+        padding: '5rem',
+    },
+    SubmitBtn: {
+        height: '55rem',
+        borderRadius: '16rem',
         alignItems: 'center',
         justifyContent: 'center',
-        marginTop: deviceType === 'Tablet' ? '6rem' : '10rem',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 5
     },
-    ForgotStyle: {
-        fontSize: deviceType === 'Tablet' ? '9.5rem' : '14rem',
-		fontFamily: 'GTWalsheimProLight',
-        paddingBottom: deviceType === 'Tablet' ? '14rem' : '20rem',
-    },
-    SignUpButton: {
-        marginTop: deviceType === 'Tablet' ? '22rem' : '30rem',
+    SubmitBtnInner: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'center'
+    },
+    SubmitBtnText: {
+        fontSize: '17rem',
+        fontFamily: 'GTWalsheimProBold',
+        marginRight: '10rem',
+    },
+    ForgotStyle: {
+        fontSize: '14rem',
+		fontFamily: 'GTWalsheimProMedium',
+    },
+    SignUpArea: {
+        marginTop: '40rem',
+        alignItems: 'center',
     },
     SignUpButtonText: {
-        textAlign: 'center',
-        fontFamily: 'GTWalsheimProLight',
-        fontSize: deviceType === 'Tablet' ? '9rem' : '15rem',
+        fontSize: '15rem',
+        fontFamily: 'GTWalsheimProRegular',
     },
-    SignUpButtonTextBold:  {
-        fontFamily: 'GTWalsheimProMedium', 
-        paddingLeft: deviceType === 'Tablet' ? '4rem' : '6rem',
-    },
-    errorText: {
-        fontSize: deviceType === 'Tablet' ? '9rem' : '13rem',
-        fontFamily: 'GTWalsheimProLight',
-        paddingLeft: deviceType === 'Tablet' ? '1.4rem' : '2rem',
-        paddingTop: deviceType === 'Tablet' ? '3rem' : '4rem',
-    }
-})
+});
 
 export default LoginScreen;
 

@@ -94,7 +94,7 @@ const App = () => {
 
 	const initialLoginState = {
 		isLoading: false,
-		userToken: 'dummy-token'
+		userToken: null
 	}
 
 	const appDefaultTheme = {

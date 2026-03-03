@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import * as Animatable from 'react-native-animatable';
 import { Text, View, TextInput, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { Colors } from '../Constants/Colors';
 import StatusBarComponent from '../Components/StatusbarComponent';
@@ -227,260 +228,153 @@ const EditProfileScreen = ({ navigation }) => {
         <View style={[styles.Container, {backgroundColor: colors.background}]}>
             <StatusBarComponent bgcolor={colors.background} barStyle={theme.dark ? 'light' : 'dark'} />
             {
-                !isData ?
-                <View style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}>
-                    <ActivityIndicator color={colors.pText} size="large" />
-                </View> :
-                <KeyboardAwareScrollView style={{flex: 1}} keyboardShouldPersistTaps='always' enableOnAndroid={true} enableAutomaticScroll={true}>
-                    <View style={{
-                        flex: 1, 
-                        justifyContent: showOTP ? 'center' : 'flex-start',
-                        paddingBottom: EStyleSheet.value('50rem')
-                    }}>
-                        {
-                            showOTP ?
-                            <View style={styles.otparea}>
-                                <Text style={[styles.TextLg, {textAlign: 'center', color: colors.pText}]}>Enter OTP</Text>
-                                <CodeInput
-                                    ref={otpbox}
-                                    codeLength={4}
-                                    secureTextEntry
-                                    activeColor={colors.pText}
-                                    inactiveColor={colors.light}
-                                    autoFocus={true}
-                                    ignoreCase={true}
-                                    inputPosition='center'
-                                    size={
-                                        deviceType === 'Tablet' ? 
-                                        EStyleSheet.value('32rem') :
-                                        EStyleSheet.value('50rem')
+                <Animatable.View animation="fadeIn" duration={800} style={{flex: 1}}>
+                    <KeyboardAwareScrollView 
+                        style={{flex: 1}} 
+                        keyboardShouldPersistTaps='always' 
+                        enableOnAndroid={true} 
+                        enableAutomaticScroll={true}
+                        showsVerticalScrollIndicator={false}
+                    >
+                        <View style={{
+                            flex: 1, 
+                            justifyContent: showOTP ? 'center' : 'flex-start',
+                        }}>
+                            {
+                                showOTP ?
+                                <Animatable.View animation="zoomIn" duration={500} style={styles.otparea}>
+                                    <Text style={[styles.TextLg, {textAlign: 'center', color: colors.text}]}>Verify Change</Text>
+                                    <Text style={[styles.TextSm, {textAlign: 'center', color: colors.light, marginBottom: 30}]}>Enter the code sent to your phone</Text>
+                                    
+                                    <CodeInput
+                                        ref={otpbox}
+                                        codeLength={4}
+                                        secureTextEntry={false}
+                                        activeColor={colors.primary}
+                                        inactiveColor={colors.lighter}
+                                        autoFocus={true}
+                                        ignoreCase={true}
+                                        inputPosition='center'
+                                        size={55}
+                                        onFulfill={(code) => {
+                                            setShowActivity(true);
+                                            setTimeout(() => {
+                                                updateProfile(data, code, OTPData, 'dummy-token', callingCode, countryCode);
+                                            }, 1000)
+                                        }}
+                                        codeInputStyle={styles.otpInputStyle}
+                                        containerStyle={{height: 100}}
+                                    /> 
+                                    
+                                    {
+                                        showActivity && (
+                                            <ActivityIndicator 
+                                                size='large' 
+                                                color={colors.primary}
+                                                style={{marginTop: 40}} 
+                                            />
+                                        )
                                     }
-                                    onFulfill={(code) => {
-                                        setShowActivity(true);
-                                        setTimeout(() => {
-                                            updateProfile(data, code, OTPData, 'dummy-token', callingCode, countryCode);
-                                        }, 1000)
-                                    }}
-                                    containerStyle={{ 
-                                        marginBottom: 
-                                        deviceType === 'Tablet' ? 
-                                        EStyleSheet.value('32rem') :
-                                        EStyleSheet.value('50rem')
-                                    }}
-                                    codeInputStyle={{ borderWidth: EStyleSheet.value('1rem') }}
-                                /> 
-                                {
-                                    showActivity ?
-                                    <ActivityIndicator 
-                                        size='large' 
-                                        color={colors.pText}
-                                        style={{
-                                            marginTop: deviceType === 'Tablet' ? 
-                                            EStyleSheet.value('24rem') :
-                                            EStyleSheet.value('30rem')
-                                        }} 
-                                    /> : null
-                                }
-                                <TouchableOpacity 
-                                    style={styles.ExtraButton}
-                                    onPress={() => getOTP(data, callingCode)}
-                                >
-                                    <Text style={[styles.ExtraButtonText, {color: colors.pText}]}>
-                                        If you didn't receive a code! 
-                                    </Text>
-                                    <Text style={[styles.ExtraButtonText, styles.ExtraButtonTextBold, {color: colors.pText}]}>
-                                        resend
-                                    </Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity 
-                                    style={styles.otpBack}
-                                    onPress={() => setShowOTP(false)}
-                                >
-                                    <AntDesign 
-                                        name='arrowleft' 
-                                        size={
-                                            deviceType === 'Tablet' ? 
-                                            EStyleSheet.value('14rem') :
-                                            EStyleSheet.value('24rem')
-                                        } 
-                                        color={colors.black} 
-                                    />
-                                </TouchableOpacity>
-                            </View>
-                            :
-                            <>
-                                <View style={[styles.TopBarStyle, {backgroundColor: colors.background}]}>
-                                    <Text style={[styles.TopBarBtnText, {color: colors.pText}]}>Edit Profile</Text>
-                                    <TouchableOpacity onPress={()=> navigation.goBack()}>
-                                        <AntDesign name="arrowleft" style={[styles.BackBtn, {color: colors.pText}]} />
-                                    </TouchableOpacity>
-                                </View>
-                                <View style={styles.FormContainer}>
-                                    <View style={styles.FormInputStyle}>
-                                        <Text style={[styles.FormInputLabelStyle, {color: colors.pText}]}>Full Name</Text>
-                                        <View style={[styles.FormInputFieldStyle, {borderColor: theme.dark ? colors.primary : colors.light}]}>
-                                            <SimpleLineIcons 
-                                                name="user" 
-                                                size={
-                                                    deviceType === 'Tablet' ? 
-                                                    EStyleSheet.value('10rem') :
-                                                    EStyleSheet.value('16rem')
-                                                } 
-                                                color={colors.pText} 
-                                                style={{
-                                                    width: deviceType === 'Tablet' ? 
-                                                    EStyleSheet.value('16rem') :
-                                                    EStyleSheet.value('25rem'),  
-                                                    alignSelf: 'center'
-                                                }} 
-                                            />
-                                            <TextInput
-                                                autoCapitalize='none'
-                                                autoCorrect={false}
-                                                style={[styles.FormTextInputStyle, {color: colors.pText}]}
-                                                placeholder="fullname"
-                                                placeholderTextColor={colors.light}
-                                                keyboardAppearance="dark"
-                                                value={data.fullname}
-                                                onChangeText={(value) => fullnameInputChange(value)}
-                                            />
-                                            {
-                                                data.isNameValid ? 
-                                                <View
-                                                    style={{alignSelf: 'center'}}
-                                                >
-                                                        <Octicons 
-                                                            name="verified" 
-                                                            size={
-                                                                deviceType === 'Tablet' ? 
-                                                                EStyleSheet.value('10rem') :
-                                                                EStyleSheet.value('15rem')
-                                                            } 
-                                                            color={colors.pText}
-                                                        />
-                                                </View>
-                                                : null
-                                            }
+
+                                    {!showActivity && (
+                                        <View style={{alignItems: 'center', marginTop: 40}}>
+                                            <TouchableOpacity 
+                                                style={styles.ExtraButton}
+                                                onPress={() => getOTP(data, callingCode)}
+                                            >
+                                                <Text style={[styles.ExtraButtonText, {color: colors.text}]}>
+                                                    Didn't receive code? <Text style={{color: colors.primary, fontFamily: 'GTWalsheimProBold'}}>Resend</Text>
+                                                </Text>
+                                            </TouchableOpacity>
+
+                                            <TouchableOpacity 
+                                                style={[styles.otpBack, {borderColor: colors.lighter}]}
+                                                onPress={() => setShowOTP(false)}
+                                            >
+                                                <AntDesign name="arrowleft" size={22} color={colors.text} />
+                                                <Text style={[styles.otpBackText, {color: colors.text}]}>Back</Text>
+                                            </TouchableOpacity>
                                         </View>
-                                        {
-                                            data.isNameValid ? null :
-                                            <Text style={[styles.errorText, {color: colors.text}]}>Please enter first name and last name</Text>
-                                        }
+                                    )}
+                                </Animatable.View>
+                                :
+                                <>
+                                    <View style={[styles.TopBarStyle, {backgroundColor: colors.background}]}>
+                                        <Text style={[styles.TopBarBtnText, {color: colors.text}]}>Edit Profile</Text>
+                                        <TouchableOpacity onPress={()=> navigation.goBack()} style={styles.BackBtnContainer}>
+                                            <AntDesign name="arrowleft" style={[styles.BackBtn, {color: colors.text}]} />
+                                        </TouchableOpacity>
                                     </View>
-                                    {/* <View style={styles.FormInputStyle}>
-                                        <Text style={[styles.FormInputLabelStyle, {color: colors.pText}]}>Email</Text>
-                                        <View style={[styles.FormInputFieldStyle, {borderColor: theme.dark ? colors.primary : colors.light}]}>
-                                            <MaterialIcons 
-                                                name="mail-outline" 
-                                                size={
-                                                    deviceType === 'Tablet' ? 
-                                                    EStyleSheet.value('12rem') :
-                                                    EStyleSheet.value('18rem')
-                                                } 
-                                                color={colors.pText} 
-                                                style={{
-                                                    width: deviceType === 'Tablet' ? 
-                                                    EStyleSheet.value('16rem') :
-                                                    EStyleSheet.value('25rem'),  
-                                                    alignSelf: 'center'
-                                                }} 
-                                            />
-                                            <TextInput
-                                                autoCapitalize='none'
-                                                autoCorrect={false}
-                                                style={[styles.FormTextInputStyle, {color: colors.pText}]}
-                                                keyboardAppearance="dark"
-                                                placeholder="email"
-                                                placeholderTextColor={colors.light}
-                                                keyboardAppearance="dark"
-                                                value={data.email}
-                                                onChangeText={(value) => emailInputChange(value)}
-                                            />
-                                            {
-                                                data.isEmailValid ? 
-                                                <View
-                                                    style={{alignSelf: 'center'}}
-                                                >
-                                                        <Octicons 
-                                                            name="verified" 
-                                                            size={
-                                                                deviceType === 'Tablet' ? 
-                                                                EStyleSheet.value('10rem') :
-                                                                EStyleSheet.value('15rem')
-                                                            } 
-                                                            color={colors.pText}
-                                                        />
-                                                </View>
-                                                : null
-                                            }
+
+                                    <Animatable.View animation="fadeInUp" delay={200} style={styles.FormContainer}>
+                                        <View style={styles.FormInputStyle}>
+                                            <Text style={[styles.FormInputLabelStyle, {color: colors.text}]}>Display Name</Text>
+                                            <View style={[styles.FormInputFieldStyle, {backgroundColor: colors.bgVar, borderColor: data.isNameValid ? colors.lighter : '#ff4444'}]}>
+                                                <SimpleLineIcons name="user" size={18} color={colors.pText} style={styles.IconStyle} />
+                                                <TextInput
+                                                    autoCapitalize='words'
+                                                    autoCorrect={false}
+                                                    style={[styles.FormTextInputStyle, {color: colors.text}]}
+                                                    placeholder="Enter your name"
+                                                    placeholderTextColor={colors.light}
+                                                    keyboardAppearance="dark"
+                                                    value={data.fullname}
+                                                    onChangeText={(value) => fullnameInputChange(value)}
+                                                />
+                                                {data.isNameValid && data.fullname.length > 0 && (
+                                                    <Octicons name="verified" size={15} color={colors.primary} />
+                                                )}
+                                            </View>
                                         </View>
-                                        {
-                                            data.isEmailValid ? null :
-                                            <Text style={[styles.errorText, {color: colors.text}]}>Please enter valid email</Text>
-                                        }
-                                    </View> */}
-                                    <View style={styles.FormInputStyle}>
-                                        <Text style={[styles.FormInputLabelStyle, {color: colors.pText}]}>Phone</Text>
-                                        <View style={[styles.FormInputFieldStyle, {borderColor: theme.dark ? colors.primary : colors.light}]}>
-                                            <CountryPicker
-                                                {...{
-                                                    countryCode,
-                                                    withFilter,
-                                                    withFlag,
-                                                    withCountryNameButton,
-                                                    withAlphaFilter,
-                                                    withCallingCode,
-                                                    withEmoji,
-                                                    onSelect,
-                                                }}
-                                                visible = {false}
-                                            />
-                                            <Text style={[styles.CountryCodeText, {color: colors.pText}]}>+{callingCode}</Text>
-                                            <TextInput
-                                                autoCapitalize='none'
-                                                autoCorrect={false}
-                                                style={[styles.FormTextInputStyle, {color: colors.pText}]}
-                                                placeholder="phone"
-                                                placeholderTextColor={colors.light}
-                                                keyboardAppearance="dark"
-                                                keyboardType="phone-pad"
-                                                value={data.phone}
-                                                onChangeText={(value) => phoneInputChange(value)}
-                                            />
-                                            {
-                                                data.isPhoneValid ? 
-                                                <View
-                                                    style={{alignSelf: 'center'}}
-                                                >
-                                                        <Octicons 
-                                                            name="verified" 
-                                                            size={
-                                                                deviceType === 'Tablet' ? 
-                                                                EStyleSheet.value('10rem') :
-                                                                EStyleSheet.value('15rem')
-                                                            } 
-                                                            color={colors.pText}
-                                                        />
-                                                </View>
-                                                : null
-                                            }
+
+                                        <View style={styles.FormInputStyle}>
+                                            <Text style={[styles.FormInputLabelStyle, {color: colors.text}]}>Phone Number</Text>
+                                            <View style={[styles.FormInputFieldStyle, {backgroundColor: colors.bgVar, borderColor: data.isPhoneValid ? colors.lighter : '#ff4444'}]}>
+                                                <CountryPicker
+                                                    {...{
+                                                        countryCode,
+                                                        withFilter: true,
+                                                        withFlag: true,
+                                                        withCallingCode: true,
+                                                        onSelect,
+                                                    }}
+                                                    theme={theme.dark ? {
+                                                        backgroundColor: '#16171B',
+                                                        primaryColor: '#fff',
+                                                        primaryColorVariant: '#7FFFD4',
+                                                    } : {}}
+                                                />
+                                                <Text style={[styles.CountryCodeText, {color: colors.text}]}>+{callingCode}</Text>
+                                                <TextInput
+                                                    autoCapitalize='none'
+                                                    autoCorrect={false}
+                                                    style={[styles.FormTextInputStyle, {color: colors.text}]}
+                                                    placeholder="Phone number"
+                                                    placeholderTextColor={colors.light}
+                                                    keyboardAppearance="dark"
+                                                    keyboardType="phone-pad"
+                                                    value={data.phone}
+                                                    onChangeText={(value) => phoneInputChange(value)}
+                                                />
+                                                {data.isPhoneValid && data.phone.length > 0 && (
+                                                    <Octicons name="verified" size={15} color={colors.primary} />
+                                                )}
+                                            </View>
                                         </View>
-                                        {
-                                            data.isPhoneValid ? null :
-                                            <Text style={[styles.errorText, {color: colors.text}]}>Please enter valid phone number</Text>
-                                        }
-                                    </View>
-                                    <TouchableOpacity 
-                                        style={styles.SubmitContainer}
-                                        onPress={() => getOTP(data, callingCode)}
-                                    >
-                                        <Text style={styles.SubmitText}>Update profile</Text>
-                                    </TouchableOpacity>
-                                </View>
-                            </>
-                        }
-                    </View>
-                </KeyboardAwareScrollView>
+
+                                        <TouchableOpacity 
+                                            activeOpacity={0.8}
+                                            style={[styles.SubmitBtn, {backgroundColor: colors.primary}]}
+                                            onPress={() => getOTP(data, callingCode)}
+                                        >
+                                            <Text style={[styles.SubmitBtnText, {color: Colors.dark}]}>Save Changes</Text>
+                                        </TouchableOpacity>
+                                    </Animatable.View>
+                                </>
+                            }
+                        </View>
+                    </KeyboardAwareScrollView>
+                </Animatable.View>
             }
         </View>
     )
@@ -493,103 +387,115 @@ const styles = EStyleSheet.create({
     TopBarStyle: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingHorizontal: deviceType === 'Tablet' ? '14rem' : '20rem',
-        height: deviceType === 'Tablet' ? '46rem' : '50rem',
-        shadowColor: "#000",
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.075,
-        shadowRadius: 3,
-        elevation: 2,
+        paddingHorizontal: '25rem',
+        height: '80rem',
+        paddingTop: '20rem',
+        justifyContent: 'center',
     },
     TopBarBtnText: {
-        fontSize: deviceType === 'Tablet' ? '12rem' : '18rem',
-        fontFamily: 'GTWalsheimProMedium',
-        color: Colors.dark,
+        fontSize: '20rem',
+        fontFamily: 'GTWalsheimProBold',
+    },
+    BackBtnContainer: {
+        position: 'absolute',
+        left: '20rem',
+        top: '38rem',
     },
     BackBtn: {
-        fontSize: deviceType === 'Tablet' ? '18rem' : '30rem',
+        fontSize: '28rem',
     },
     TextLg: {
-        fontSize: deviceType === 'Tablet' ? '24rem' : '35rem',
-        fontFamily: 'GTWalsheimProMedium',
-        paddingBottom: deviceType === 'Tablet' ? '4rem' : '6rem',
+        fontSize: '32rem',
+        fontFamily: 'GTWalsheimProBold',
+        marginBottom: '10rem',
+    },
+    TextSm: {
+        fontSize: '16rem',
+        fontFamily: 'GTWalsheimProRegular',
     },
     FormContainer: {
-        marginTop: deviceType === 'Tablet' ? '14rem' : '20rem',
-        marginHorizontal: deviceType === 'Tablet' ? '14rem' : '20rem',
+        marginTop: '30rem',
+        paddingHorizontal: '25rem',
     },
     FormInputStyle: {
-		marginBottom: deviceType === 'Tablet' ? '14rem' : '20rem',
+		marginBottom: '25rem',
 	},
 	FormInputLabelStyle: {
-		fontSize: deviceType === 'Tablet' ? '10.5rem' : '16rem',
-		fontFamily: 'GTWalsheimProLight',
-        paddingBottom: deviceType === 'Tablet' ? '7rem' : '10rem',
+		fontSize: '15rem',
+		fontFamily: 'GTWalsheimProMedium',
+        marginBottom: '10rem',
+        opacity: 0.8,
 	},
 	FormInputFieldStyle: {
 		flexDirection: 'row',
-		borderWidth: '1rem',
-        height: deviceType === 'Tablet' ? '26rem' : '40rem',
-        borderRadius: deviceType === 'Tablet' ? '13rem' : '25rem',
-        paddingHorizontal: deviceType === 'Tablet' ? '9rem' : '14rem',
+		borderWidth: '1.5rem',
+        height: '60rem',
+        borderRadius: '18rem',
+        paddingHorizontal: '18rem',
         alignItems: 'center'
     },
     FormTextInputStyle: {
         flex: 1,
-        fontSize: deviceType === 'Tablet' ? '9rem' : '13rem',
-        height: deviceType === 'Tablet' ? '26rem' : '40rem',
+        fontSize: '16rem',
+        fontFamily: 'GTWalsheimProMedium',
+        height: '100%',
+        marginLeft: '10rem',
+    },
+    IconStyle: {
+        opacity: 0.6,
     },
     CountryCodeText: {
-        paddingRight: deviceType === 'Tablet' ? '2.8rem' : '4rem',
+        fontSize: '16rem',
+        fontFamily: 'GTWalsheimProBold',
+        marginLeft: '10rem',
+        paddingRight: '5rem',
     },
-    SubmitContainer: {
-        height: deviceType === 'Tablet' ? '26rem' : '40rem',
-        borderRadius: deviceType === 'Tablet' ? '13rem' : '25rem',
-        backgroundColor: Colors.primary,
+    SubmitBtn: {
+        height: '60rem',
+        borderRadius: '18rem',
         alignItems: 'center',
         justifyContent: 'center',
-        marginTop: deviceType === 'Tablet' ? '9rem' : '15rem',
+        marginTop: '20rem',
+        shadowColor: Colors.primary,
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.2,
+        shadowRadius: 15,
+        elevation: 8,
     },
-    SubmitText: {
-        fontSize: deviceType === 'Tablet' ? '10.5rem' : '16rem',
-        color: Colors.dark,
-        fontFamily: 'GTWalsheimProMedium',
+    SubmitBtnText: {
+        fontSize: '18rem',
+        fontFamily: 'GTWalsheimProBold',
+    },
+    otparea: {
+        paddingHorizontal: '30rem',
+        paddingTop: '60rem',
+    },
+    otpInputStyle: {
+        borderWidth: '2rem',
+        borderRadius: '12rem',
+        fontSize: '22rem',
+        fontFamily: 'GTWalsheimProBold',
     },
     otpBack: {
-        height: deviceType === 'Tablet' ? '26rem' : '40rem',
-        width: deviceType === 'Tablet' ? '26rem' : '40rem',
-        borderRadius: deviceType === 'Tablet' ? '13rem' : '25rem',
-        backgroundColor: Colors.primary,
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginTop: deviceType === 'Tablet' ? '7rem' : '10rem',
-        alignSelf: 'center',
-        marginTop: deviceType === 'Tablet' ? '32rem' : '50rem',
-    },
-    ExtraButton: {
-        marginTop: deviceType === 'Tablet' ? '18rem' : '30rem',
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'center'
+        marginTop: '30rem',
+        paddingVertical: '10rem',
+        paddingHorizontal: '20rem',
+        borderRadius: '12rem',
+        borderWidth: '1rem',
+    },
+    otpBackText: {
+        fontSize: '16rem',
+        fontFamily: 'GTWalsheimProBold',
+        marginLeft: '10rem',
+    },
+    ExtraButton: {
+        marginTop: '20rem',
     },
     ExtraButtonText: {
-        textAlign: 'center',
-        fontFamily: 'GTWalsheimProLight',
-        fontSize: deviceType === 'Tablet' ? '10rem' : '15rem',
-    },
-    ExtraButtonTextBold:  {
-        fontFamily: 'GTWalsheimProMedium', 
-        paddingLeft: deviceType === 'Tablet' ? '4rem' : '6rem',
-    },
-    errorText: {
-        fontSize: deviceType === 'Tablet' ? '7.5rem' : '13rem',
-        fontFamily: 'GTWalsheimProLight',
-        paddingLeft: '2rem',
-        paddingTop: deviceType === 'Tablet' ? '2.8rem' : '4rem',
+        fontSize: '15rem',
+        fontFamily: 'GTWalsheimProRegular',
     }
 })
 

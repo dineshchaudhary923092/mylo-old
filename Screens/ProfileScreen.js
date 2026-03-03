@@ -1,4 +1,5 @@
 import React, { useState, useContext, useEffect, useRef } from 'react';
+import * as Animatable from 'react-native-animatable';
 import { Text, View, Image, Dimensions, TouchableOpacity, ActivityIndicator, Switch, ScrollView, FlatList } from 'react-native';
 import { Colors } from '../Constants/Colors';
 import StatusBarComponent from '../Components/StatusbarComponent';
@@ -315,99 +316,119 @@ const ProfileScreen = ({ navigation }) => {
                 <View style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}>
                     <ActivityIndicator size='large' color={colors.pText} style={{marginTop: EStyleSheet.value('30rem')}} />
                 </View> :
-                <Animated.View style={{flex: 1}}>
-                    <ScrollView>
+                <Animatable.View animation="fadeIn" duration={800} style={{flex: 1}}>
+                    <ScrollView showsVerticalScrollIndicator={false}>
                         <View style={[styles.TopBarStyle, {backgroundColor: colors.background}]}>
-                            <Text style={[styles.TopBarBtnText, {color: colors.pText}]}>Profile</Text>
-                            <TouchableOpacity onPress={()=> navigation.navigate('Home')}>
-                                <AntDesign name="arrowleft" style={[styles.BackBtn, {color: colors.pText}]} />
+                            <Text style={[styles.TopBarBtnText, {color: colors.text}]}>Profile Settings</Text>
+                            <TouchableOpacity onPress={()=> navigation.navigate('Home')} style={styles.BackBtnContainer}>
+                                <AntDesign name="arrowleft" style={[styles.BackBtn, {color: colors.text}]} />
                             </TouchableOpacity>
                         </View>
-                        <View style={styles.ProfileWrap}>
-                            <TouchableOpacity 
-                                style={{position: 'relative'}}
-                                onPress={() => {
-                                    bs.current.snapTo(0);
-                                }}
-                            >
-                                <Image 
-                                    source={require('../assets/profile-user.png')} 
-                                    resizeMode='cover' 
-                                    style={styles.ProfileImg}
-                                />
-                                <View style={styles.ImageEdit}>
-                                    <FontAwesome5 name='camera' style={styles.ImageEditIcon} />
+
+                        <Animatable.View animation="fadeInDown" delay={200} style={styles.ProfileCardWrap}>
+                            <View style={[styles.ProfileCard, {backgroundColor: colors.bgVar, borderColor: colors.lighter}]}>
+                                <TouchableOpacity 
+                                    style={styles.ProfileImgContainer}
+                                    onPress={() => bs.current.snapTo(0)}
+                                >
+                                    <Image 
+                                        source={require('../assets/profile-user.png')} 
+                                        resizeMode='cover' 
+                                        style={styles.ProfileImg}
+                                    />
+                                    <View style={[styles.ImageEdit, {backgroundColor: colors.primary}]}>
+                                        <Feather name='camera' style={[styles.ImageEditIcon, {color: Colors.dark}]} />
+                                    </View>
+                                </TouchableOpacity>
+                                <View style={styles.ProfileInfo}>
+                                    <Text style={[styles.ProfileNameText, {color: colors.text}]} numberOfLines={1}>{userData.data.user.name}</Text>
+                                    <Text style={[styles.ProfilePhoneText, {color: colors.light}]}>{userData.data.user.phone}</Text>
                                 </View>
-                            </TouchableOpacity>
-                            <View style={styles.ProfileInfo}>
-                                <Text style={styles.ProfileName} numberOfLines={1} ellipsizeMode='tail'>{userData.data.user.name}</Text>
-                                <Text style={styles.ProfileEmail}>{userData.data.user.phone}</Text>
                             </View>
-                        </View>
-                        <View style={styles.SettingsWrap}>
-                            <View style={[styles.DarkMode, {borderTopColor: colors.lighter, borderBottomColor: colors.lighter}]}>
-                                <View style={styles.DarkModeTextWrap}>
-                                    <Text style={[styles.DarkModeText, {color: colors.pText}]}>Darkmode</Text>
-                                </View>
-                                <View>
+                        </Animatable.View>
+
+                        <Animatable.View animation="fadeInUp" delay={400} style={styles.SettingsWrap}>
+                            <View style={[styles.SettingsSection, {backgroundColor: colors.bgVar, borderColor: colors.lighter}]}>
+                                <View style={[styles.DarkMode, {borderBottomWidth: 1, borderBottomColor: colors.lighter}]}>
+                                    <View style={styles.SettingsItemIconWrap}>
+                                        <View style={[styles.SettingsIconSmall, {backgroundColor: 'rgba(255, 255, 255, 0.05)'}]}>
+                                            <Feather name='moon' size={18} color={colors.primary} />
+                                        </View>
+                                        <Text style={[styles.SettingsItemText, {color: colors.text}]}>Dark Mode</Text>
+                                    </View>
                                     <Switch
-                                        trackColor={{ false: "#767577", true: Colors.primary }}
+                                        trackColor={{ false: "#333", true: colors.primary }}
                                         thumbColor={isEnabled ? Colors.dark : "#f4f3f4"}
-                                        ios_backgroundColor="#3e3e3e"
+                                        ios_backgroundColor="#1A1B1F"
                                         onValueChange={() => toggleSwitch()}
                                         value={isEnabled}
                                     />
                                 </View>
+
+                                <TouchableOpacity 
+                                    style={[styles.SettingsItem, {borderBottomWidth: 1, borderBottomColor: colors.lighter}]}
+                                    onPress={()=> bsPop.current.snapTo(0)}
+                                >
+                                    <View style={styles.SettingsItemIconWrap}>
+                                        <View style={[styles.SettingsIconSmall, {backgroundColor: 'rgba(255, 255, 255, 0.05)'}]}>
+                                            <Feather name='bell' size={18} color={colors.primary} />
+                                        </View>
+                                        <Text style={[styles.SettingsItemText, {color: colors.text}]}>Notification Radius</Text>
+                                    </View>
+                                    <View style={styles.RightAction}>
+                                        <Text style={[styles.NotifyText, {color: colors.primary}]}>{notifyMe}km</Text>
+                                        <Feather name='chevron-right' size={18} color={colors.light} />
+                                    </View>
+                                </TouchableOpacity>  
+
+                                <TouchableOpacity 
+                                    style={[styles.SettingsItem, {borderBottomWidth: 1, borderBottomColor: colors.lighter}]}
+                                    onPress={()=> navigation.navigate('EditProfile', {
+                                        userData: userData,
+                                        token: 'dummy-token'
+                                    })}
+                                >
+                                    <View style={styles.SettingsItemIconWrap}>
+                                        <View style={[styles.SettingsIconSmall, {backgroundColor: 'rgba(255, 255, 255, 0.05)'}]}>
+                                            <Feather name='edit-3' size={18} color={colors.primary} />
+                                        </View>
+                                        <Text style={[styles.SettingsItemText, {color: colors.text}]}>Edit Profile</Text>
+                                    </View>
+                                    <Feather name='chevron-right' size={18} color={colors.light} />
+                                </TouchableOpacity>  
+
+                                <TouchableOpacity 
+                                    style={[styles.SettingsItem, {borderBottomWidth: 1, borderBottomColor: colors.lighter}]}
+                                    onPress={()=> navigation.navigate('ChangePassword')}
+                                >
+                                    <View style={styles.SettingsItemIconWrap}>
+                                        <View style={[styles.SettingsIconSmall, {backgroundColor: 'rgba(255, 255, 255, 0.05)'}]}>
+                                            <Feather name='lock' size={18} color={colors.primary} />
+                                        </View>
+                                        <Text style={[styles.SettingsItemText, {color: colors.text}]}>Change Password</Text>
+                                    </View>
+                                    <Feather name='chevron-right' size={18} color={colors.light} />
+                                </TouchableOpacity>  
+
+                                <TouchableOpacity 
+                                    style={styles.SettingsItem}
+                                    onPress={()=> logout()}
+                                >
+                                    <View style={styles.SettingsItemIconWrap}>
+                                        <View style={[styles.SettingsIconSmall, {backgroundColor: 'rgba(255, 78, 78, 0.1)'}]}>
+                                            <Feather name='log-out' size={18} color="#FF4E4E" />
+                                        </View>
+                                        <Text style={[styles.SettingsItemText, {color: "#FF4E4E"}]}>Logout Account</Text>
+                                    </View>
+                                </TouchableOpacity>  
                             </View>
-                            <TouchableOpacity 
-                                style={[styles.SettingsItem, {borderBottomColor: colors.lighter}]}
-                                onPress={()=> bsPop.current.snapTo(0)}
-                            >
-                                <View style={styles.SettingsIcon}>
-                                    <Feather name='bell' style={[styles.SettingSvgIcon, {
-                                        fontSize: deviceType === 'Tablet' ? 
-                                        EStyleSheet.value('14rem') : 
-                                        EStyleSheet.value('20rem')
-                                    }]} />
-                                </View>
-                                <Text style={[styles.SettingsItemText, {color: colors.pText}]}>Notification Settings</Text>
-                            </TouchableOpacity>  
-                            <TouchableOpacity 
-                                style={[styles.SettingsItem, {borderBottomColor: colors.lighter}]}
-                                onPress={()=> navigation.navigate('EditProfile', {
-                                    userData: userData,
-                                    token: 'dummy-token'
-                                })}
-                            >
-                                <View style={styles.SettingsIcon}>
-                                    <EditIcon style={styles.SettingSvgIcon} fill={Colors.dark} />
-                                </View>
-                                <Text style={[styles.SettingsItemText, {color: colors.pText}]}>Edit Profile</Text>
-                            </TouchableOpacity>  
-                            <TouchableOpacity 
-                                style={[styles.SettingsItem, {borderBottomColor: colors.lighter}]}
-                                onPress={()=> navigation.navigate('ChangePassword')}
-                            >
-                                <View style={styles.SettingsIcon}>
-                                    <KeyIcon style={styles.SettingSvgIcon} fill={Colors.dark} />
-                                </View>
-                                <Text style={[styles.SettingsItemText, {color: colors.pText}]}>Change Password</Text>
-                            </TouchableOpacity>  
-                            <TouchableOpacity 
-                                style={[styles.SettingsItem, {borderBottomColor: colors.lighter}]}
-                                onPress={()=> logout()}
-                            >
-                                <View style={styles.SettingsIcon}>
-                                    <LogoutIcon style={styles.SettingSvgIcon} fill={Colors.dark} />
-                                </View>
-                                <Text style={[styles.SettingsItemText, {color: colors.pText}]}>Logout</Text>
-                            </TouchableOpacity>  
-                        </View>
+                        </Animatable.View>
+
                         <View style={styles.FooterWrap}>
-                            <Text style={[styles.FooterText, {color: colors.text}]}>© Mylo. Version 1.0</Text>
+                            <Text style={[styles.FooterText, {color: colors.light}]}>Mylo v2026.1.0 • Connected Hearts</Text>
                         </View>
                     </ScrollView>
-                </Animated.View>
+                </Animatable.View>
             }
         </View>
     )
@@ -422,177 +443,193 @@ const styles = EStyleSheet.create({
     TopBarStyle: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingHorizontal: deviceType === 'Tablet' ? '14rem' : '20rem',
-        height: deviceType === 'Tablet' ? '46rem' : '50rem',
-        shadowColor: "#000",
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.075,
-        shadowRadius: 3,
-        elevation: 2,
-        marginBottom: deviceType === 'Tablet' ? '13rem' : '25rem',
+        paddingHorizontal: '25rem',
+        height: '80rem',
+        paddingTop: '20rem',
+        justifyContent: 'center',
     },
     TopBarBtnText: {
-        fontSize: deviceType === 'Tablet' ? '12rem' : '18rem',
-        fontFamily: 'GTWalsheimProMedium',
-        color: Colors.dark,
+        fontSize: '20rem',
+        fontFamily: 'GTWalsheimProBold',
+    },
+    BackBtnContainer: {
+        position: 'absolute',
+        left: '20rem',
+        top: '38rem',
     },
     BackBtn: {
-        fontSize: deviceType === 'Tablet' ? '18rem' : '30rem',
+        fontSize: '28rem',
     },
-    ProfileWrap: {
-        height: deviceType === 'Tablet' ? '130rem' : '180rem',
-        marginHorizontal: deviceType === 'Tablet' ? '14rem' : '20rem',
+    ProfileCardWrap: {
+        paddingHorizontal: '25rem',
+        marginTop: '20rem',
+        marginBottom: '30rem',
+    },
+    ProfileCard: {
+        width: '100%',
+        paddingVertical: '30rem',
+        paddingHorizontal: '20rem',
+        borderRadius: '24rem',
+        borderWidth: '1rem',
         alignItems: 'center',
-        justifyContent: 'center',
-        paddingHorizontal: deviceType === 'Tablet' ? '9rem' : '15rem',
-        borderRadius: deviceType === 'Tablet' ? '8rem' : '12rem',
-        backgroundColor: Colors.primary,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.1,
+        shadowRadius: 20,
+        elevation: 10,
     },
-    ProfileInfo: {
-        marginTop: deviceType === 'Tablet' ? '8rem' : '12rem'
+    ProfileImgContainer: {
+        position: 'relative',
+        marginBottom: '15rem',
     },
     ProfileImg: {
-        height: deviceType === 'Tablet' ? '62rem' : '90rem',
-        width: deviceType === 'Tablet' ? '62rem' : '90rem',
-        borderRadius: deviceType === 'Tablet' ? '31rem' : '45rem',
+        height: '110rem',
+        width: '110rem',
+        borderRadius: '55rem',
+        borderWidth: '3rem',
+        borderColor: 'rgba(255, 255, 255, 0.1)',
     },
     ImageEdit: {
         position: 'absolute',
-        bottom: 0,
-        right: 0,
-        backgroundColor: Colors.dark,
-        height: deviceType === 'Tablet' ? '18rem' : '30rem',
-        width: deviceType === 'Tablet' ? '18rem' : '30rem',
-        borderRadius: deviceType === 'Tablet' ? '9rem' : '15rem',
+        bottom: '5rem',
+        right: '5rem',
+        height: '32rem',
+        width: '32rem',
+        borderRadius: '16rem',
         alignItems: 'center',
-        justifyContent: 'center'
+        justifyContent: 'center',
+        elevation: 5,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
     },
     ImageEditIcon: {
-        fontSize: deviceType === 'Tablet' ? '9rem' : '14rem',
-        color: Colors.primary,
+        fontSize: '16rem',
     },
-    ProfileName: {
-        fontSize: deviceType === 'Tablet' ? '11rem' : '16rem',
+    ProfileInfo: {
+        alignItems: 'center',
+    },
+    ProfileNameText: {
+        fontSize: '24rem',
+        fontFamily: 'GTWalsheimProBold',
+        marginBottom: '5rem',
+    },
+    ProfilePhoneText: {
+        fontSize: '15rem',
         fontFamily: 'GTWalsheimProRegular',
-        textAlign: 'center',
-        maxWidth: '80%'
+        letterSpacing: '0.5rem',
     },
-    ProfileEmail: {
-        fontSize: deviceType === 'Tablet' ? '8rem' : '12rem',
-        fontFamily: 'GTWalsheimProLight',
-        textAlign: 'center',
-        letterSpacing: '0.5rem'
+    SettingsWrap: {
+        paddingHorizontal: '25rem',
+    },
+    SettingsSection: {
+        borderRadius: '24rem',
+        borderWidth: '1rem',
+        overflow: 'hidden',
     },
     SettingsItem: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: deviceType === 'Tablet' ? '14rem' : '20rem',
-        paddingVertical: deviceType === 'Tablet' ? '9rem' : '15rem',
-        borderBottomWidth: '1rem'
+        justifyContent: 'space-between',
+        paddingHorizontal: '20rem',
+        paddingVertical: '18rem',
     },
-    SettingsIcon: {
-        height: deviceType === 'Tablet' ? '30rem' : '45rem',
-        width: deviceType === 'Tablet' ? '30rem' : '45rem',
-        borderRadius: deviceType === 'Tablet' ? '15rem' : '23rem',
-        backgroundColor: Colors.primary,
+    DarkMode: {
+        flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'center'
+        justifyContent: 'space-between',
+        paddingHorizontal: '20rem',
+        paddingVertical: '16rem',
     },
-    SettingSvgIcon: {
-        height: deviceType === 'Tablet' ? '14rem' : '20rem',
-        width: deviceType === 'Tablet' ? '14rem' : '20rem',
+    SettingsItemIconWrap: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    SettingsIconSmall: {
+        height: '42rem',
+        width: '42rem',
+        borderRadius: '14rem',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: '15rem',
     },
     SettingsItemText: {
-        fontSize: deviceType === 'Tablet' ? '10.5rem' : '16rem',
+        fontSize: '16rem',
         fontFamily: 'GTWalsheimProMedium',
-        marginLeft: deviceType === 'Tablet' ? '9rem' : '15rem',
+    },
+    RightAction: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    NotifyText: {
+        fontSize: '14rem',
+        fontFamily: 'GTWalsheimProBold',
+        marginRight: '8rem',
     },
     FooterWrap: {
-        paddingVertical: deviceType === 'Tablet' ? '14rem' : '20rem',
+        marginTop: '40rem',
+        marginBottom: '30rem',
+        alignItems: 'center',
     },
     FooterText: {
-        textAlign: 'center',
-        fontSize: deviceType === 'Tablet' ? '7.5rem' : '13rem',
+        fontSize: '13rem',
+        fontFamily: 'GTWalsheimProRegular',
+        opacity: 0.5,
     },
     BottomSheet: {
-        padding: deviceType === 'Tablet' ? '12rem' : '16rem',
+        padding: '25rem',
         height: '100%',
-        justifyContent: 'flex-start',
-        paddingTop: deviceType === 'Tablet' ? '18rem' : '30rem',
-        borderTopLeftRadius: deviceType === 'Tablet' ? '14rem' : '20rem',
-        borderTopRightRadius: deviceType === 'Tablet' ? '14rem' : '20rem',
+        borderTopLeftRadius: '30rem',
+        borderTopRightRadius: '30rem',
     },
     bsHeader: {
-        height: deviceType === 'Tablet' ? '26rem' : '40rem',
+        height: '30rem',
         alignItems: 'center',
-        justifyContent: 'flex-end',
-        paddingBottom: deviceType === 'Tablet' ? '8rem' : '12rem'
+        justifyContent: 'center',
     },
     bsHandle: {
-        height: deviceType === 'Tablet' ? '3.75rem' : '6rem',
-        width: deviceType === 'Tablet' ? '32rem' : '50rem',
-        borderRadius: '3rem'
+        height: '6rem',
+        width: '50rem',
+        borderRadius: '3rem',
     },
     SubmitContainer: {
-        height: deviceType === 'Tablet' ? '26rem' : '40rem',
-        borderRadius: deviceType === 'Tablet' ? '13rem' : '25rem',
+        height: '55rem',
+        borderRadius: '16rem',
         backgroundColor: Colors.primary,
         alignItems: 'center',
         justifyContent: 'center',
-        marginTop: deviceType === 'Tablet' ? '14rem' : '20rem',
+        marginTop: '15rem',
         width: '100%'
     },
     SubmitText: {
-        fontSize: deviceType === 'Tablet' ? '10.5rem' : '16rem',
+        fontSize: '16rem',
         color: Colors.dark,
-        fontFamily: 'GTWalsheimProMedium',
-    },
-    DarkMode: {
-        paddingHorizontal: deviceType === 'Tablet' ? '14rem' : '20rem',
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        borderTopWidth: 1,
-        borderBottomWidth: 1,
-        marginTop: deviceType === 'Tablet' ? '13rem' : '25rem',
-        marginBottom: deviceType === 'Tablet' ? '7rem' : '10rem',
-        height: deviceType === 'Tablet' ? '35rem' : '55rem',
-    },
-    DarkModeTextWrap: {
-        flexDirection: 'row',
-        alignItems: 'center'
-    },
-    DarkModeText: {
-        fontSize: deviceType === 'Tablet' ? '10.5rem' : '16rem',
-        fontFamily: 'GTWalsheimProMedium',
-        paddingLeft: deviceType === 'Tablet' ? '7rem' : '10rem',
+        fontFamily: 'GTWalsheimProBold',
     },
     ConfirmPop: {
-        padding: deviceType === 'Tablet' ? '14rem' : '20rem'
+        padding: '25rem',
     },
     ConfirmPopText: {
-        fontFamily: 'GTWalsheimProRegular',
-        fontSize: deviceType === 'Tablet' ? '12rem' : '18rem',
-        paddingBottom: deviceType === 'Tablet' ? '10.5rem' : '15rem',
+        fontFamily: 'GTWalsheimProBold',
+        fontSize: '20rem',
+        marginBottom: '20rem',
     },
     ListWrap: {
         borderWidth: '1rem',
-        alignSelf: 'center',
-        borderRadius: '5rem'
+        borderRadius: '15rem',
+        overflow: 'hidden',
     },
     DistanceBtn: {
-        height: deviceType === 'Tablet' ? '21.65rem' : '35rem',
-        width: deviceType === 'Tablet' ? '35rem' : '55rem',
+        height: '50rem',
+        width: '70rem',
         justifyContent: 'center',
         alignItems: 'center',
-        borderRightWidth: '1rem'
+        borderRightWidth: '1rem',
     },
     DistanceBtnText: {
-        fontFamily: 'GTWalsheimProMedium'
+        fontSize: '16rem',
+        fontFamily: 'GTWalsheimProBold'
     }
 })
 

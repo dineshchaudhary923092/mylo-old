@@ -72,22 +72,20 @@ const AppNavigation = ({userToken}) => {
 		<>
 			{
 				userToken != null ?
-				<SafeAreaView style={{flex: 1, backgroundColor: theme.dark ? '#16171B' : '#fff'}}>
+				<SafeAreaView style={{flex: 1, backgroundColor: colors.background}}>
 					{
 						Platform.OS === 'android' ?
 						<StatusBar backgroundColor={colors.primary} barStyle='dark-content' /> : null
 					}
 					<MainScreen/> 
-					{/* <SafeAreaView style={{flex: 0, backgroundColor: theme.dark ? '#333' : colors.primary}}/> */}
 				</SafeAreaView> :
-				<>
+				<SafeAreaView style={{flex: 1, backgroundColor: colors.background}}>
 					{
 						Platform.OS === 'android' ?
 						<StatusBar backgroundColor={colors.primary} barStyle='dark-content' /> : null
 					}
 					<AuthScreen/>
-					<SafeAreaView style={{flex: 0, backgroundColor: theme.dark ? '#333' : colors.background}}/>
-				</>
+				</SafeAreaView>
 			}
 		</>
 	);

@@ -13,6 +13,8 @@ import EStyleSheet from 'react-native-extended-stylesheet';
 
 let deviceType = getDeviceType();
 
+import * as Animatable from 'react-native-animatable';
+
 const NotificationScreen = ({ navigation, route }) => {
 
     const theme = useTheme();
@@ -89,7 +91,8 @@ const NotificationScreen = ({ navigation, route }) => {
                         heading: 'James Carter wants to be your buddy',
                         timestamp: '5 minutes ago',
                         type: 'request',
-                        type_id: 101
+                        type_id: 101,
+                        role: 'New Request'
                     },
                     {
                         id: 2,
@@ -97,7 +100,8 @@ const NotificationScreen = ({ navigation, route }) => {
                         heading: 'Priya Sharma accepted your request',
                         timestamp: '1 hour ago',
                         type: 'interaction',
-                        type_id: null
+                        type_id: null,
+                        role: 'Activity'
                     },
                     {
                         id: 3,
@@ -105,7 +109,8 @@ const NotificationScreen = ({ navigation, route }) => {
                         heading: 'Alex Johnson sent you a location',
                         timestamp: '3 hours ago',
                         type: 'interaction',
-                        type_id: null
+                        type_id: null,
+                        role: 'Activity'
                     }
                 ]);
             }
@@ -125,69 +130,86 @@ const NotificationScreen = ({ navigation, route }) => {
     return (
         <View style={[styles.Container, { backgroundColor: colors.background }]}>
             <StatusBarComponent bgcolor={colors.background} barStyle={theme.dark ? 'light' : 'dark'} />
+            
+            <View style={[styles.TopBarStyle, {backgroundColor: colors.background}]}>
+                <Text style={[styles.TopBarBtnText, {color: colors.text}]}>Alerts</Text>
+                <TouchableOpacity onPress={()=> navigation.goBack()} style={styles.BackBtnContainer}>
+                    <AntDesign name="arrowleft" style={[styles.BackBtn, {color: colors.text}]} />
+                </TouchableOpacity>
+            </View>
+
             {
                 notificationData === null ?
                     <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-                        <ActivityIndicator color={colors.pText} size="large" />
+                        <ActivityIndicator color={colors.primary} size="large" />
                     </View>
                     :
-                    <View style={{ flex: 1 }}>
-                        <View style={[styles.TopBarStyle, {backgroundColor: colors.background}]}>
-                            <Text style={[styles.TopBarBtnText, {color: colors.pText}]}>Notifications</Text>
-                            <TouchableOpacity onPress={()=> navigation.goBack()}>
-                                <AntDesign name="arrowleft" style={[styles.BackBtn, {color: colors.pText}]} />
-                            </TouchableOpacity>
-                        </View>
+                    <Animatable.View animation="fadeIn" duration={800} style={{ flex: 1 }}>
                         <View style={styles.NotificationsWrap}>
                             {
                                 notificationData === 'empty' ?
-                                    <View style={{ flex: 1 }}><Text style={[styles.emptyText, { color: colors.pText }]}>No Notification</Text></View> :
+                                    <View style={styles.EmptyState}>
+                                        <AntDesign name="notification" size={60} color={colors.lighter} />
+                                        <Text style={[styles.emptyText, { color: colors.light }]}>No notifications yet</Text>
+                                    </View> :
                                     <FlatList
+                                        contentContainerStyle={{paddingBottom: 40}}
                                         style={styles.ListWrap}
                                         data={notificationData}
                                         keyExtractor={(item, index) => item.id ? item.id.toString() : index.toString()}
-                                        renderItem={({ item }) => {
+                                        renderItem={({ item, index }) => {
                                             return (
-                                                <View style={[styles.NotificationsBox, { borderBottomColor: colors.lighter }]}>
+                                                <Animatable.View 
+                                                    animation="fadeInUp" 
+                                                    delay={100 + (index * 100)} 
+                                                    style={[styles.NotificationsBox, { backgroundColor: colors.bgVar, borderColor: colors.lighter }]}
+                                                >
                                                     <View style={styles.NotificationsBoxInner}>
-                                                        <Image
-                                                            source={require('../assets/profile-user.png')}
-                                                            resizeMode='cover'
-                                                            style={styles.NotificationsImg}
-                                                        />
+                                                        <View style={styles.ImgContainer}>
+                                                            <Image
+                                                                source={require('../assets/profile-user.png')}
+                                                                resizeMode='cover'
+                                                                style={styles.NotificationsImg}
+                                                            />
+                                                            <View style={[styles.StatusDot, {backgroundColor: item.type === 'request' ? colors.primary : '#444'}]} />
+                                                        </View>
+                                                        
                                                         <View style={styles.NotificationsInfo}>
-                                                            <Text style={[styles.NotificationsText, { color: colors.text }]}>{item.heading}</Text>
-                                                            <View style={styles.NotificationsActions}>
+                                                            <View style={styles.RowBetween}>
+                                                                <Text style={[styles.RoleText, { color: colors.primary }]}>{item.role}</Text>
                                                                 <Text style={[styles.NotificationsTextTime, { color: colors.light }]}>{item.timestamp}</Text>
-                                                                {
-                                                                    item.type_id != null && item.type === 'request' ?
-                                                                    <View style={styles.NotificationsActionsRight}>
-                                                                        <TouchableOpacity
-                                                                            onPress={() => handleRespond(item.type_id, 'accepted')}
-                                                                        >
-                                                                            <View style={[styles.NotificationBtn, { backgroundColor: colors.primary, }]}>
-                                                                                <Text style={styles.NotificationBtnText}>Accept</Text>
-                                                                            </View>
-                                                                        </TouchableOpacity>
-                                                                        <TouchableOpacity
-                                                                            onPress={() => handleRespond(item.type_id, 'rejected')}
-                                                                        >
-                                                                            <View style={[styles.NotificationBtn, styles.NotificationBtnVar]}>
-                                                                                <Text style={[styles.NotificationBtnText, { color: '#fff' }]}>Reject</Text>
-                                                                            </View>
-                                                                        </TouchableOpacity>
-                                                                    </View> : null
-                                                                }
                                                             </View>
+                                                            
+                                                            <Text style={[styles.NotificationsText, { color: colors.text }]}>{item.heading}</Text>
+                                                            
+                                                            {
+                                                                item.type_id != null && item.type === 'request' ?
+                                                                <View style={styles.NotificationsActionsRight}>
+                                                                    <TouchableOpacity
+                                                                        activeOpacity={0.8}
+                                                                        onPress={() => handleRespond(item.type_id, 'accepted')}
+                                                                        style={[styles.NotificationBtn, { backgroundColor: colors.primary }]}
+                                                                    >
+                                                                        <Text style={styles.NotificationBtnText}>Accept</Text>
+                                                                    </TouchableOpacity>
+                                                                    <TouchableOpacity
+                                                                        activeOpacity={0.8}
+                                                                        onPress={() => handleRespond(item.type_id, 'rejected')}
+                                                                        style={[styles.NotificationBtn, styles.NotificationBtnVar, {borderColor: colors.lighter}]}
+                                                                    >
+                                                                        <Text style={[styles.NotificationBtnText, { color: colors.text }]}>Decline</Text>
+                                                                    </TouchableOpacity>
+                                                                </View> : null
+                                                            }
                                                         </View>
                                                     </View>
-                                                </View>
+                                                </Animatable.View>
                                             )
                                         }}
                                     />
                             }
                         </View>
-                    </View>
+                    </Animatable.View>
             }
         </View>
     )
@@ -200,78 +222,107 @@ const styles = EStyleSheet.create({
     TopBarStyle: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingHorizontal: deviceType === 'Tablet' ? '14rem' : '20rem',
-        height: deviceType === 'Tablet' ? '46rem' : '50rem',
-        shadowColor: "#000",
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.075,
-        shadowRadius: 3,
-        elevation: 2,
+        paddingHorizontal: '25rem',
+        height: '80rem',
+        paddingTop: '20rem',
+        justifyContent: 'center',
     },
     TopBarBtnText: {
-        fontSize: deviceType === 'Tablet' ? '12rem' : '18rem',
-        fontFamily: 'GTWalsheimProMedium',
-        color: Colors.dark,
+        fontSize: '20rem',
+        fontFamily: 'GTWalsheimProBold',
+    },
+    BackBtnContainer: {
+        position: 'absolute',
+        left: '20rem',
+        top: '38rem',
     },
     BackBtn: {
-        fontSize: deviceType === 'Tablet' ? '18rem' : '30rem',
+        fontSize: '28rem',
     },
     NotificationsBox: {
-        paddingVertical: deviceType === 'Tablet' ? '9rem' : '15rem',
-        borderBottomWidth: '1rem',
+        marginHorizontal: '20rem',
+        marginTop: '15rem',
+        padding: '15rem',
+        borderRadius: '20rem',
+        borderWidth: '1.2rem',
     },
     NotificationsBoxInner: {
         flexDirection: 'row',
-        marginLeft: deviceType === 'Tablet' ? '14rem' : '20rem',
+    },
+    ImgContainer: {
+        position: 'relative',
     },
     NotificationsImg: {
-        height: deviceType === 'Tablet' ? '30rem' : '42rem',
-        width: deviceType === 'Tablet' ? '30rem' : '42rem',
-        borderRadius: deviceType === 'Tablet' ? '15rem' : '21rem',
+        height: '50rem',
+        width: '50rem',
+        borderRadius: '25rem',
+    },
+    StatusDot: {
+        position: 'absolute',
+        bottom: 0,
+        right: 0,
+        width: '14rem',
+        height: '14rem',
+        borderRadius: '7rem',
+        borderWidth: '2rem',
+        borderColor: '#16171B',
     },
     NotificationsInfo: {
-        marginLeft: deviceType === 'Tablet' ? '8rem' : '12rem',
-        flexShrink: 1,
-        flex: 1
+        marginLeft: '15rem',
+        flex: 1,
     },
-    NotificationsText: {
-        fontSize: deviceType === 'Tablet' ? '9.5rem' : '14rem',
-        fontFamily: 'GTWalsheimProRegular',
-    },
-    NotificationsActions: {
+    RowBetween: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        paddingTop: deviceType === 'Tablet' ? '7rem' : '10rem',
+        marginBottom: '5rem',
+    },
+    RoleText: {
+        fontSize: '12rem',
+        fontFamily: 'GTWalsheimProBold',
+        letterSpacing: '0.5rem',
+        textTransform: 'uppercase',
+    },
+    NotificationsText: {
+        fontSize: '15rem',
+        fontFamily: 'GTWalsheimProMedium',
+        lineHeight: '20rem',
     },
     NotificationsTextTime: {
-        fontSize: deviceType === 'Tablet' ? '8rem' : '12rem',
+        fontSize: '11rem',
+        fontFamily: 'GTWalsheimProRegular',
+        opacity: 0.6,
     },
     NotificationsActionsRight: {
         flexDirection: 'row',
-        justifyContent: 'flex-end',
-        marginRight: deviceType === 'Tablet' ? '7rem' : '10rem',
+        marginTop: '15rem',
     },
     NotificationBtn: {
-        paddingVertical: deviceType === 'Tablet' ? '3.2rem' : '5rem',
-        paddingHorizontal: deviceType === 'Tablet' ? '8rem' : '12rem',
-        marginLeft: deviceType === 'Tablet' ? '5rem' : '8rem',
-        borderRadius: deviceType === 'Tablet' ? '5rem' : '8rem'
+        height: '38rem',
+        paddingHorizontal: '20rem',
+        borderRadius: '12rem',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: '10rem',
     },
     NotificationBtnText: {
-        fontFamily: 'GTWalsheimProMedium',
-        fontSize: deviceType === 'Tablet' ? '8.5rem' : '13rem',
+        fontFamily: 'GTWalsheimProBold',
+        fontSize: '13rem',
     },
     NotificationBtnVar: {
-        backgroundColor: '#CD2F2A'
+        backgroundColor: 'rgba(255, 255, 255, 0.05)',
+        borderWidth: '1rem',
+    },
+    EmptyState: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingBottom: '100rem',
     },
     emptyText: {
-        textAlign: 'center',
-        paddingVertical: deviceType === 'Tablet' ? '18rem' : '30rem',
+        marginTop: '20rem',
+        fontSize: '18rem',
+        fontFamily: 'GTWalsheimProBold',
     }
 })
 

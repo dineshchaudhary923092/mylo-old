@@ -1,5 +1,6 @@
 import React, { useState, useContext, useEffect, useRef } from 'react';
 import { Text, View, Image, FlatList, TouchableOpacity, Dimensions, ActivityIndicator, Switch, ScrollView } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Api } from '../Constants/Api';
 import { Colors } from '../Constants/Colors';
 import StatusBarComponent from '../Components/StatusbarComponent';
@@ -15,6 +16,7 @@ import EStyleSheet from 'react-native-extended-stylesheet';
 let deviceType = getDeviceType();
 
 const BuddyGroupScreen = ({ navigation, route }) => {
+    const insets = useSafeAreaInsets();
 
     const theme = useTheme();
     const { colors } = useTheme();
@@ -90,9 +92,9 @@ const BuddyGroupScreen = ({ navigation, route }) => {
 
     return (
         <View style={[styles.Container, {backgroundColor: colors.background}]}>
-            <View style={[styles.TopBarStyle, {backgroundColor: colors.background}]}>
+            <View style={[styles.TopBarStyle, {paddingTop: insets.top + (deviceType === 'Tablet' ? 8 : 12), backgroundColor: colors.background}]}>
                 <Text style={[styles.TopBarBtnText, {color: colors.pText}]}>Group Info</Text>
-                <TouchableOpacity onPress={()=> navigation.goBack()}>
+                <TouchableOpacity onPress={()=> navigation.goBack()} style={styles.BackBtnContainer}>
                     <AntDesign name="arrowleft" style={[styles.BackBtn, {color: colors.pText}]} />
                 </TouchableOpacity>
             </View>
@@ -187,17 +189,15 @@ const styles = EStyleSheet.create({
     TopBarStyle: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingHorizontal: deviceType === 'Tablet' ? '14rem' : '20rem',
-        height: deviceType === 'Tablet' ? '46rem' : '50rem',
-        shadowColor: "#000",
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.075,
-        shadowRadius: 3,
-        elevation: 2,
+        paddingHorizontal: '20rem',
+        paddingBottom: '14rem',
+        justifyContent: 'center',
+        zIndex: 100,
+    },
+    BackBtnContainer: {
+        position: 'absolute',
+        left: '20rem',
+        bottom: '14rem',
     },
     TopBarBtnText: {
         fontSize: deviceType === 'Tablet' ? '12rem' : '18rem',

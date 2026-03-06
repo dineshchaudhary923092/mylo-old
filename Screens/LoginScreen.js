@@ -1,5 +1,6 @@
 import React, { useState, useContext, useEffect } from 'react';
 import { Text, View, TextInput, ActivityIndicator, TouchableOpacity, Dimensions } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import StatusBarComponent from '../Components/StatusbarComponent';
 import { Colors } from '../Constants/Colors';
 import SimpleLineIcons from 'react-native-vector-icons/SimpleLineIcons';
@@ -19,6 +20,7 @@ import * as Animatable from 'react-native-animatable';
 let deviceType = getDeviceType();
 
 const LoginScreen = ({ navigation }) => {
+    const insets = useSafeAreaInsets();
 
     const theme = useTheme();
     const { colors } = useTheme();
@@ -88,7 +90,7 @@ const LoginScreen = ({ navigation }) => {
                 enableOnAndroid={true}
                 contentContainerStyle={{flexGrow: 1}}
             >
-                <Animatable.View animation="fadeIn" duration={1000} style={styles.InnerContainer}>
+                <Animatable.View animation="fadeIn" duration={1000} style={[styles.InnerContainer, {paddingTop: insets.top + 40}]}>
                     <Animatable.View animation="fadeInDown" delay={200}>
                         <Text style={[styles.TextLg, {color: colors.text}]}>Hello Again!</Text>
                         <Text style={[styles.TextSm, {color: colors.light}]}>Sign in to your account to continue</Text>

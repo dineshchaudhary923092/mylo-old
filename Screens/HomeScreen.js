@@ -1,16 +1,16 @@
 import React, { useState, useContext, useEffect, useRef } from 'react';
-import { Text, View, AppState, Image, FlatList, TouchableOpacity, TextInput, Dimensions, Platform, ActivityIndicator } from 'react-native';
+import { Text, View, AppState, Image, FlatList, TouchableOpacity, TextInput, Dimensions, Platform, ActivityIndicator, StyleSheet } from 'react-native';
 import { Api } from '../Constants/Api';
 import { Colors } from '../Constants/Colors';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import StatusBarComponent from '../Components/StatusbarComponent';
 import Octicons from 'react-native-vector-icons/Octicons';
 import Entypo from 'react-native-vector-icons/Entypo';
+import Feather from 'react-native-vector-icons/Feather';
 import BottomSheet from 'reanimated-bottom-sheet';
 import Animated from 'react-native-reanimated';
-import { PermissionsAndroid } from 'react-native';
 import { showMessage } from "react-native-flash-message";
 import { useIsFocused } from '@react-navigation/native';
-import Contacts from 'react-native-contacts';
 import useAxios from '../Hooks/useAxios';
 import { useTheme } from '@react-navigation/native';
 import { getDeviceType } from 'react-native-device-info';
@@ -19,538 +19,305 @@ import { KeyboardAwareScrollView } from '@codler/react-native-keyboard-aware-scr
 import BuddiesScreen from '../Screens/BuddiesScreen';
 import GroupsScreen from '../Screens/GroupsScreen';
 import { SocketContext } from '../Components/SocketContext'
+import LinearGradient from 'react-native-linear-gradient';
+import Svg, { Defs, RadialGradient, Rect, Stop } from 'react-native-svg';
 
 let deviceType = getDeviceType();
 
-const NotificationArea = ({navigation, socket}) => {
-
-    const [notificationCount, setNotificationCount] = useState(null);
-    const isFocused = useIsFocused();
-
-    useEffect(() => {
-        setNotificationCount(3);
-    }, [isFocused])
-
-    return (
-        <TouchableOpacity 
-            onPress={() => navigation.navigate('Notification')}
-            style={styles.roundBtn}
-        >
-            <Image source={require('../assets/bell.png')} resizeMode='contain' style={styles.roundBtnImg} />
-        </TouchableOpacity>
-    )
-
-}
-
-const HomeScreen = ({ navigation }, props) => {
-
+const HomeScreen = (props) => {
+    const { navigation } = props;
+    const insets = useSafeAreaInsets();
     const theme = useTheme();
     const { colors } = useTheme();
-
     const isFocused = useIsFocused();
 
     const bs = useRef(null);
     const [fall, setFall] = useState(new Animated.Value(1));
     const [InviteContactsList, setInviteContactsList] = useState([]);
     const [ContactsMatched, setContactsMatched] = useState([]);
-    const [requestCount, setRequestCount] = useState(0);
+    const [requestCount, setRequestCount] = useState(3);
     const [BuddyBrowse, setBuddyBrowse] = useState(true);
 
-    const [
-        getData, 
-        responseData, 
-        setResponseData, 
-        responseType, 
-        response, 
-        setResponse, 
-        _getUserData, 
-        userData, 
-        setUserData, 
-        isData
-    ] = useAxios();  
+    const [_getData, _responseData, _setResponseData, _responseType, _response, _setResponse, _getUserData, userData, setUserData, isData] = useAxios();  
 
     useEffect(() => {
-        if(responseType === 'syncContacts') {
-            if(responseData.error === 1) {
-                setInviteContactsList(responseData.data.invite);
-                setContactsMatched(responseData.data.invite);
-                setRequestCount(responseData.data.request.length);
-            } else {
-                setResponse(false);
-                bs.current.snapTo(1);
-            }
-        }
-    }, [responseData]);
-    
-    useEffect(() => {
-        // getUserData(); // Removed as we use static dummy token
         if (bs.current) {
             bs.current.snapTo(1);
         }
     }, [isFocused])
 
     const openDrawer = () => {
-        bs.current.snapTo(0);
         const dummyContacts = [
-            {
-                name: 'Dummy Contact 1',
-                phone: '+1234567890',
-                image: 'dummy.jpg',
-                idNormal: '1'
-            },
-            {
-                name: 'Dummy Contact 2',
-                phone: '+0987654321',
-                image: 'dummy.jpg',
-                idNormal: '2'
-            }
+            { name: 'Sarah Mitchell', phone: '+1 (555) 123-4567', image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=200&auto=format&fit=crop', idNormal: '1' },
+            { name: 'James Carter', phone: '+1 (555) 987-6543', image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=200&auto=format&fit=crop', idNormal: '2' },
+            { name: 'Priya Sharma', phone: '+1 (555) 456-7890', image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop', idNormal: '3' },
+            { name: 'Marcus Miller', phone: '+1 (555) 234-5678', image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=200&auto=format&fit=crop', idNormal: '4' },
+            { name: 'Elena Rodriguez', phone: '+1 (555) 345-6789', image: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=200&auto=format&fit=crop', idNormal: '5' }
         ];
         setInviteContactsList(dummyContacts);
         setContactsMatched(dummyContacts);
-        setRequestCount(2);
+        bs.current.snapTo(0);
     }
 
     const filteredContacts = (searchTerm) => {
-        setContactsMatched(InviteContactsList.filter(value => {
-            if(value.name.toLowerCase().includes(searchTerm.toLowerCase())) {
-                return value;
-            }
-        }));
+        setContactsMatched(InviteContactsList.filter(value => 
+            value.name.toLowerCase().includes(searchTerm.toLowerCase())
+        ));
     }
 
-    const searchContactsChange = (value) => {
-        filteredContacts(value);
-    }
-
-    const startConversation = (id) => {
-        navigation.navigate('Chat', {
-            cData: { id: id },
-            chatType: 'cone',
-        });
-    }
-
-    const renderContent = (socket) => (
-        <KeyboardAwareScrollView 
-            enableOnAndroid={true} 
-            enableAutomaticScroll={true} 
-            keyboardShouldPersistTaps='always' 
-            style={{minHeight: '100%', backgroundColor: colors.sheet}}
-        >
-            <View style={[styles.BottomSheet, {backgroundColor: colors.sheet}]}>
+    const renderDrawerContent = () => (
+        <View style={styles.DrawerContainer}>
+            <View style={styles.DrawerCard}>
+                <View style={styles.DrawerIndicator} />
                 <View style={styles.DrawerHeader}>
-                    <Text style={[styles.DrawerTitle, {color: colors.pText}]}>Contacts</Text>
-                    <TouchableOpacity 
-                        style={styles.CloseDrawer}
-                        onPress={() => bs.current.snapTo(1)}
-                    >
-                        <Text style={[styles.CloseDrawerText, {color: theme.dark ? '#79B7F8' : '#3f97f6'}]}>cancel</Text>
+                    <Text style={styles.DrawerTitle}>New Message</Text>
+                    <TouchableOpacity onPress={() => bs.current.snapTo(1)}>
+                        <Text style={styles.DrawerCancelText}>Cancel</Text>
                     </TouchableOpacity>
                 </View>
-                <View style={[styles.FormInputFieldStyle, styles.FormInputFieldVarStyle, {backgroundColor: colors.background}]}>
-                    <Octicons 
-                        name="search" 
-                        size={
-                            deviceType === 'Tablet' ? 
-                            EStyleSheet.value('12rem') :
-                            EStyleSheet.value('18rem')
-                        } 
-                        color={colors.pText} 
-                        style={{
-                            width: deviceType === 'Tablet' ? 
-                            EStyleSheet.value('16rem') :
-                            EStyleSheet.value('25rem'),  
-                            alignSelf: 'center'
-                        }} 
-                    />
+
+                <View style={styles.SearchWrapper}>
+                    <Feather name="search" size={18} color="rgba(255,255,255,0.4)" />
                     <TextInput
-                        autoCapitalize='none'
-                        autoCorrect={false}
-                        style={[styles.FormTextInputStyle, {color: colors.pText}]}
-                        placeholder="Search..."
-                        placeholderTextColor={colors.light}
+                        placeholder="Search buddies..."
+                        placeholderTextColor="rgba(255,255,255,0.3)"
+                        style={styles.SearchInput}
+                        onChangeText={filteredContacts}
                         keyboardAppearance="dark"
-                        onChangeText={(value) => searchContactsChange(value)}
                     />
                 </View>
-                <View style={[styles.DrawerBody, {flex: 1}]}>
-                    {
-                        requestCount != 0 ?
+
+                {requestCount > 0 && (
+                    <TouchableOpacity 
+                        style={styles.RequestsAlert}
+                        onPress={() => navigation.navigate('Notification')}
+                    >
+                        <View style={styles.RequestsAlertLeft}>
+                            <View style={styles.RequestsIconWrap}>
+                                <Feather name="user-plus" size={16} color={colors.primary} />
+                            </View>
+                            <Text style={styles.RequestsAlertText}>You have {requestCount} new buddy requests</Text>
+                        </View>
+                        <Feather name="chevron-right" size={16} color={colors.primary} />
+                    </TouchableOpacity>
+                )}
+
+                <FlatList 
+                    data={ContactsMatched}
+                    keyExtractor={item => item.idNormal}
+                    contentContainerStyle={{ paddingBottom: 40 }}
+                    renderItem={({ item }) => (
                         <TouchableOpacity 
-                            style={styles.requestBtn}
+                            style={styles.ContactItem}
                             onPress={() => {
-                                navigation.navigate('Notifications', {
-                                    request: true
-                                })
+                                bs.current.snapTo(1);
+                                navigation.navigate('Chat', { cData: item, chatType: 'cone' });
                             }}
                         >
-                            <Text style={[styles.requestBtnText, {color: colors.pText}]}>You have {requestCount} new requests</Text>
-                        </TouchableOpacity> : null
-                    }
-                    {
-                        ContactsMatched.length < 1 ?
-                        <Text style={[styles.emptyText, {color: colors.pText}]}>No Contacts Found</Text> :
-                        <FlatList 
-                            style={styles.ListWrap}
-                            data={ContactsMatched}
-                            keyExtractor={ (item, index) => item.phone ? item.phone.toString() : index.toString() }
-                            renderItem={ ({ item }) => {
-                                return (
-                                    <TouchableOpacity 
-                                        style={[styles.ListItem, {borderBottomColor: colors.lighter}]}
-                                        onPress={() => startConversation(item.idNormal)}
-                                    >
-                                        <View style={styles.ListItemBody}>
-                                            <Image 
-                                                source={{uri: item.image}} 
-                                                resizeMode='cover' 
-                                                style={styles.ListItemImg}
-                                            />
-                                            <View style={styles.ListItemTextWrap}>
-                                                <Text ellipsizeMode='tail' numberOfLines={1} style={[styles.ListItemText, {color: colors.pText}]}>{item.name}</Text>
-                                                <Text style={[styles.ListItemSmText, {color: colors.light}]}>{item.phone}</Text>
-                                            </View>
-                                        </View>
-                                    </TouchableOpacity>      
-                                )
-                            }}
-                        />   
-                    }
-                </View>
-            </View> 
-        </KeyboardAwareScrollView>
+                            <Image source={{ uri: item.image }} style={styles.ContactImg} />
+                            <View style={styles.ContactInfo}>
+                                <Text style={styles.ContactName}>{item.name}</Text>
+                                <Text style={styles.ContactPhone}>{item.phone}</Text>
+                            </View>
+                            <Feather name="plus-circle" size={20} color="rgba(255,255,255,0.2)" />
+                        </TouchableOpacity>
+                    )}
+                />
+            </View>
+        </View>
     );
 
     return (
-        <View style={[styles.Container, {backgroundColor: colors.background}]}>
-            <SocketContext.Consumer>
-                {
-                    socket => 
-                    <BottomSheet
-                        ref={bs}
-                        snapPoints={[
-                            screenHeight > 720 ? 
-                            deviceType === 'Tablet' ?
-                            Dimensions.get('window').height * 0.90 :
-                            Dimensions.get('window').height * 0.825 
-                            : Dimensions.get('window').height * 0.85, 0
-                        ]}
-                        renderContent={() => renderContent(socket)}
-                        enabledGestureInteraction={Platform.OS === 'android' ? false : true}
-                        initialSnap={1}
-                        callbackNode={fall}
-                    />
-                }
-            </SocketContext.Consumer>
-            <StatusBarComponent bgcolor={colors.background} barStyle={theme.dark ? 'light' : 'dark'} />
-            <View style={styles.Container}>
-                <View style={[styles.UserPanel, {backgroundColor: colors.background, shadowColor: theme.dark ? "#fff" : '#000'}]}>
+        <View style={styles.Container}>
+            <StatusBarComponent bgcolor="transparent" barStyle="light-content" />
+            
+            <LinearGradient
+                colors={['#0C1A14', '#09090B', '#09090B']}
+                start={{ x: 0.5, y: 0 }}
+                end={{ x: 0.5, y: 0.6 }}
+                style={[StyleSheet.absoluteFill]}
+            />
+
+            <View style={styles.GlowBlob} pointerEvents="none">
+                <Svg width="500" height="500">
+                    <Defs>
+                        <RadialGradient id="glow" cx="50%" cy="50%" rx="50%" ry="50%">
+                            <Stop offset="0%" stopColor="#7FFFD4" stopOpacity="0.15" />
+                            <Stop offset="40%" stopColor="#7FFFD4" stopOpacity="0.06" />
+                            <Stop offset="100%" stopColor="#7FFFD4" stopOpacity="0" />
+                        </RadialGradient>
+                    </Defs>
+                    <Rect width="500" height="500" fill="url(#glow)" />
+                </Svg>
+            </View>
+
+            <BottomSheet
+                ref={bs}
+                snapPoints={[Dimensions.get('window').height * 0.85, 0]}
+                renderContent={renderDrawerContent}
+                enabledGestureInteraction={true}
+                initialSnap={1}
+                callbackNode={fall}
+            />
+
+            <View style={{ flex: 1 }}>
+                {/* Modern Unified Header for Home */}
+                <View style={[styles.HomeHeader, { paddingTop: insets.top + (deviceType === 'Tablet' ? 8 : 12) }]}>
                     <TouchableOpacity 
                         onPress={() => navigation.navigate('Profile')}
-                        style={styles.roundBtn}
+                        style={styles.HeaderAvatarBtn}
+                        activeOpacity={0.8}
                     >
                         <Image 
-                                source={require('../assets/profile-user.png')} 
-                                resizeMode='contain' 
-                                style={styles.roundBtnImg} 
-                            />
+                            source={{ uri: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?q=80&w=200&auto=format&fit=crop' }} 
+                            style={styles.HeaderAvatar} 
+                        />
+                        <View style={styles.OnlineDot} />
                     </TouchableOpacity>
-                    <Text ellipsizeMode='tail' numberOfLines={1} style={[styles.UserPanelText, {color: colors.pText}]}>Chats</Text>
-                    <SocketContext.Consumer>
-                        {
-                            socket => 
-                            <NotificationArea {...props} socket={socket} navigation={navigation} />
-                        }
-                    </SocketContext.Consumer>   
+                    
+                    <Text style={styles.HomeHeaderTitle}>Mylo</Text>
+                    
+                    <TouchableOpacity 
+                        onPress={() => navigation.navigate('Notification')}
+                        style={styles.HeaderIconBtn}
+                    >
+                        <Feather name="bell" size={20} color="#FFFFFF" />
+                        <View style={styles.BadgeDot} />
+                    </TouchableOpacity>
                 </View>
-                <View style={styles.HeadingWrap}>
-                    <View style={styles.HeadingWrapInner}>
+
+                <View style={{ flex: 1, marginTop: insets.top + (deviceType === 'Tablet' ? 65 : 78) }}>
+                    <View style={styles.TabSwitcherWrap}>
+                    <View style={styles.TabSwitcher}>
                         <TouchableOpacity
                             onPress={() => setBuddyBrowse(true)}
+                            style={[styles.TabBtn, BuddyBrowse && styles.TabBtnActive]}
                         >
-                            <Text style={[styles.HeadingWrapText, BuddyBrowse ? styles.HeadingWrapTextActive : null, {color: colors.text}]}>Buddies</Text>
+                            <Text style={[styles.TabText, BuddyBrowse && styles.TabTextActive]}>Buddies</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                             onPress={() => setBuddyBrowse(false)}
+                            style={[styles.TabBtn, !BuddyBrowse && styles.TabBtnActive]}
                         >
-                            <Text style={[styles.HeadingWrapText, BuddyBrowse ? null : styles.HeadingWrapTextActive, {color: colors.text}]}>Groups</Text>
+                            <Text style={[styles.TabText, !BuddyBrowse && styles.TabTextActive]}>Groups</Text>
                         </TouchableOpacity>
                     </View>
                     <TouchableOpacity 
-                        onPress={() => {
-                            if(BuddyBrowse) {
-                                openDrawer()
-                            } else {
-                                navigation.navigate('ManageGroup', {
-                                    type: 'Add'
-                                })
-                            }
-                        }}
-                        style={styles.roundBtn}
+                        onPress={() => BuddyBrowse ? openDrawer() : navigation.navigate('ManageGroup', { type: 'Add' })}
+                        style={styles.AddButton}
                     >
-                        <Entypo name='plus' style={[styles.roundBtnText, {color: colors.pText}]} />
+                        <Feather name='plus' size={24} color="#09090B" />
                     </TouchableOpacity>
                 </View>
-                {
-                    BuddyBrowse ? 
-                    <SocketContext.Consumer>
-                        {
-                            socket => <BuddiesScreen {...props} socket={socket} navigation={navigation} />
-                        }
-                    </SocketContext.Consumer>                  
-                    :
-                    <SocketContext.Consumer>
-                        {
-                            socket => <GroupsScreen {...props} socket={socket} navigation={navigation} />
-                        }
-                    </SocketContext.Consumer>      
-                }
+
+                    {BuddyBrowse ? 
+                        <SocketContext.Consumer>
+                            {socket => <BuddiesScreen {...props} socket={socket} navigation={navigation} />}
+                        </SocketContext.Consumer>                  
+                        :
+                        <SocketContext.Consumer>
+                            {socket => <GroupsScreen {...props} socket={socket} navigation={navigation} />}
+                        </SocketContext.Consumer>      
+                    }
+                </View>
             </View>
         </View>
     )
 }
 
-const screenHeight = Dimensions.get('window').height;
-
 const styles = EStyleSheet.create({
-    Container: {
-        flex: 1,
+    Container: { flex: 1, backgroundColor: '#09090B' },
+    GlowBlob: {
+        position: 'absolute', top: -150, left: '50%',
+        marginLeft: -250, width: 500, height: 500,
+        alignItems: 'center', justifyContent: 'center',
     },
-    TopBarStyle: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'flex-end',
-        marginHorizontal: deviceType === 'Tablet' ? '14rem' : '20rem',
-        height: deviceType === 'Tablet' ? '30rem' : '42rem',
-        paddingBottom: deviceType === 'Tablet' ? '5rem' : '8rem',
-        zIndex: 2
+    HomeHeader: {
+        flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+        paddingHorizontal: '20rem', paddingBottom: '15rem',
+        position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10,
     },
-    TopBarBtnText: {
-        fontSize: deviceType === 'Tablet' ? '11rem' : '16rem',
-        fontFamily: 'GTWalsheimProRegular',
+    HomeHeaderTitle: {
+        fontSize: '18rem', fontFamily: 'GTWalsheimProBold',
+        letterSpacing: '0.3rem', color: '#FFFFFF',
     },
-    FormInputFieldStyle: {
-		flexDirection: 'row',
-        height: deviceType === 'Tablet' ? '26rem' : '40rem',
-        borderRadius: deviceType === 'Tablet' ? '7rem' : '10rem',
-        paddingLeft: deviceType === 'Tablet' ? '9rem' : '14rem',
-        marginHorizontal: deviceType === 'Tablet' ? '14rem' : '20rem',
-        marginTop: deviceType === 'Tablet' ? '7rem' : '10rem',
-        backgroundColor: Colors.gray
+    HeaderAvatarBtn: { position: 'relative' },
+    HeaderAvatar: {
+        width: '40rem', height: '40rem', borderRadius: '20rem',
+        borderWidth: 1.5, borderColor: 'rgba(127,255,212,0.4)',
     },
-    FormInputFieldVarStyle: {
-        borderRadius: deviceType === 'Tablet' ? '5rem' : '8rem',
-        borderWidth: 0,
-        marginBottom: deviceType === 'Tablet' ? '8rem' : '12rem',
+    OnlineDot: {
+        position: 'absolute', bottom: 0, right: 0,
+        width: '12rem', height: '12rem', borderRadius: '6rem',
+        backgroundColor: '#7FFFD4', borderWidth: 2, borderColor: '#09090B',
     },
-    FormTextInputStyle: {
-        flex: 1,
-        fontFamily: 'GTWalsheimProRegular',
-        fontSize: deviceType === 'Tablet' ? '9rem' : '13rem',
+    HeaderIconBtn: {
+        width: '40rem', height: '40rem', borderRadius: '20rem',
+        backgroundColor: 'rgba(255,255,255,0.06)',
+        alignItems: 'center', justifyContent: 'center',
+        borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
     },
-    UserPanel: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingHorizontal: deviceType === 'Tablet' ? '14rem' : '20rem',
-        paddingVertical: deviceType === 'Tablet' ? '7rem' : '10rem',
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.05,
-        shadowRadius: 3,
-        elevation: 2,
+    BadgeDot: {
+        position: 'absolute', top: '10rem', right: '10rem',
+        width: '8rem', height: '8rem', borderRadius: '4rem',
+        backgroundColor: '#FF4E4E', borderWidth: 1.5, borderColor: '#09090B',
     },
-    UserPanelText: {
-        fontFamily: 'GTWalsheimProBold',
-        fontSize: deviceType === 'Tablet' ? '12rem' : '18rem',
-        maxWidth: '50%',
+    TabSwitcherWrap: {
+        flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+        paddingHorizontal: '20rem', marginBottom: '16rem', marginTop: '8rem',
     },
-    HeadingWrap: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginHorizontal: deviceType === 'Tablet' ? '14rem' : '20rem',
-        marginTop: deviceType === 'Tablet' ? '12rem' : '18rem',
-        marginBottom: deviceType === 'Tablet' ? '3.5rem' : '5rem',
+    TabSwitcher: {
+        flexDirection: 'row', backgroundColor: 'rgba(255,255,255,0.04)',
+        borderRadius: '16rem', padding: '4rem', flex: 1, marginRight: '16rem',
+        borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)',
     },
-    HeadingWrapText: {
-        fontSize: deviceType === 'Tablet' ? '20rem' : '24rem',
-        paddingRight: deviceType === 'Tablet' ? '5rem' : '8rem',
-        fontFamily: 'GTWalsheimProBold',
-        opacity: 0.35,
+    TabBtn: { flex: 1, height: '38rem', alignItems: 'center', justifyContent: 'center', borderRadius: '12rem' },
+    TabBtnActive: { backgroundColor: '#7FFFD4' },
+    TabText: { fontSize: '15rem', fontFamily: 'GTWalsheimProBold', color: 'rgba(255,255,255,0.4)' },
+    TabTextActive: { color: '#09090B' },
+    AddButton: {
+        width: '46rem', height: '46rem', borderRadius: '18rem',
+        backgroundColor: '#7FFFD4', alignItems: 'center', justifyContent: 'center',
+        shadowColor: '#7FFFD4', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 5,
     },
-    HeadingWrapTextActive: {
-        opacity: 1
+    // Drawer/BottomSheet Styles
+    DrawerContainer: { paddingHorizontal: '16rem', paddingBottom: '20rem' },
+    DrawerCard: {
+        backgroundColor: '#16171B', borderRadius: '32rem', height: '100%',
+        padding: '24rem', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)',
     },
-    HeadingWrapInner: {
-        flexDirection: 'row',
-        alignItems: 'flex-end',
+    DrawerIndicator: {
+        width: '40rem', height: '5rem', borderRadius: '3rem',
+        backgroundColor: 'rgba(255,255,255,0.15)', alignSelf: 'center', marginBottom: '20rem',
     },
-    roundBtn: {
-        height: deviceType === 'Tablet' ? '24rem' : '30rem',
-        width: deviceType === 'Tablet' ? '24rem' : '30rem',
-        borderRadius: deviceType === 'Tablet' ? '24rem' : '30rem',
-        alignItems: 'center',
-        justifyContent: 'center'
+    DrawerHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20rem' },
+    DrawerTitle: { fontSize: '18rem', fontFamily: 'GTWalsheimProBold', color: '#FFFFFF' },
+    DrawerCancelText: { fontSize: '15rem', fontFamily: 'GTWalsheimProBold', color: '#FF4E4E' },
+    SearchWrapper: {
+        flexDirection: 'row', alignItems: 'center', height: '50rem',
+        backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: '16rem',
+        paddingHorizontal: '16rem', marginBottom: '16rem',
     },
-    roundBtnText: {
-        fontSize: deviceType === 'Tablet' ? '17rem' : '24rem',
+    SearchInput: { flex: 1, marginLeft: '12rem', color: '#FFFFFF', fontSize: '15rem' },
+    RequestsAlert: {
+        flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+        backgroundColor: 'rgba(127,255,212,0.06)', padding: '14rem', borderRadius: '18rem',
+        marginBottom: '20rem', borderWidth: 1, borderColor: 'rgba(127,255,212,0.15)',
     },
-    roundBtnImg: {
-        height: '100%',
-        width: '100%',
-        borderRadius: deviceType === 'Tablet' ? '24rem' : '30rem',
-        resizeMode: 'cover'
+    RequestsAlertLeft: { flexDirection: 'row', alignItems: 'center' },
+    RequestsIconWrap: {
+        width: '32rem', height: '32rem', borderRadius: '10rem',
+        backgroundColor: 'rgba(127,255,212,0.15)', alignItems: 'center', justifyContent: 'center', marginRight: '12rem',
     },
-    ListItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        borderBottomWidth: '1rem',
-        paddingHorizontal: deviceType === 'Tablet' ? '14rem' : '20rem',
-        height: deviceType === 'Tablet' ? '63rem' : '90rem',
+    RequestsAlertText: { fontSize: '14rem', fontFamily: 'GTWalsheimProMedium', color: '#7FFFD4' },
+    ContactItem: {
+        flexDirection: 'row', alignItems: 'center', paddingVertical: '12rem',
+        borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.04)',
     },
-    ListItemBody: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    ListItemImg: {
-        height: deviceType === 'Tablet' ? '42rem' : '60rem',
-        width: deviceType === 'Tablet' ? '42rem' : '60rem',
-        borderRadius: deviceType === 'Tablet' ? '21rem' : '30rem',
-    },
-    ListItemTextWrap: {
-        marginLeft: deviceType === 'Tablet' ? '8rem' : '12rem',
-        flex: 1
-    },
-    ListItemInner: {
-        flexDirection: 'row',
-        alignItems: 'flex-start',
-        justifyContent: 'space-between',
-    },
-    ListItemText: {
-        fontFamily: 'GTWalsheimProBold',
-        fontSize: deviceType === 'Tablet' ? '10.5rem' : '15rem',
-    },
-    ListItemChatText: {
-        fontSize: deviceType === 'Tablet' ? '10rem' : '13rem',
-        lineHeight: deviceType === 'Tablet' ? '15rem' : '18rem',
-        fontFamily: 'GTWalsheimProRegular',
-        maxWidth: '85%',
-    },
-    ListItemSmText: {
-        fontSize: deviceType === 'Tablet' ? '8rem' : '12rem',
-        textTransform: 'capitalize', 
-        fontFamily: 'GTWalsheimProLight',
-        letterSpacing: '0.5rem'
-    },
-    ListItemCount: {
-        height: deviceType === 'Tablet' ? '17.5rem' : '25rem',
-        width: deviceType === 'Tablet' ? '17.5rem' : '25rem',
-        borderRadius: deviceType === 'Tablet' ? '9rem' : '12.5rem',
-        alignItems: 'center',
-        justifyContent: 'center'
-    },
-    ListItemCountText: {
-        fontSize: deviceType === 'Tablet' ? '8rem' : '12rem',
-        lineHeight: deviceType === 'Tablet' ? '17.5rem' : '25rem',
-        fontFamily: 'GTWalsheimProMedium',
-    },
-    ListItemActive: {
-        position: 'absolute',
-        right: 0,
-        bottom: 0,
-        height: deviceType === 'Tablet' ? '14rem' : '18rem',
-        width: deviceType === 'Tablet' ? '14rem' : '18rem',
-        borderRadius: deviceType === 'Tablet' ? '7rem' : '9rem',
-        backgroundColor: '#58C174',
-        borderWidth: '1rem',
-        borderColor: '#fff',
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    ListItemActiveIcon: {
-        color: '#fff',
-        fontSize: deviceType === 'Tablet' ? '7rem' : '10rem',
-    },
-    BottomSheet: {
-        paddingTop: deviceType === 'Tablet' ? '12rem' : '16rem',
-        height: '100%',
-        borderTopLeftRadius: deviceType === 'Tablet' ? '14rem' : '20rem',
-        borderTopRightRadius: deviceType === 'Tablet' ? '14rem' : '20rem',
-    },
-    DrawerHeader: {
-        position: 'relative',
-        height: deviceType === 'Tablet' ? '18rem' : '30rem',
-    },
-    DrawerTitle: {
-        fontSize: deviceType === 'Tablet' ? '11rem' : '14rem',
-        fontFamily: 'GTWalsheimProMedium',
-        textAlign: 'center',
-        lineHeight: deviceType === 'Tablet' ? '18rem' : '30rem',
-    },
-    CloseDrawer: {
-        position: 'absolute',
-        top: 0,
-        bottom: 0,
-        right: deviceType === 'Tablet' ? '8rem' : '14rem',
-    },
-    CloseDrawerText: {
-        textTransform: "capitalize",
-        fontFamily: 'GTWalsheimProMedium',
-        lineHeight: deviceType === 'Tablet' ? '18rem' : '30rem',
-        fontSize: deviceType === 'Tablet' ? '10rem' : '14rem',
-    },
-    DrawerBuddyAdd: {
-        backgroundColor: Colors.dark,
-        borderRadius: deviceType === 'Tablet' ? '18rem' : '30rem',
-        paddingVertical: 0,
-        paddingHorizontal: deviceType === 'Tablet' ? '8rem' : '14rem',
-        height: deviceType === 'Tablet' ? '18rem' : '30rem',
-    },
-    DrawerBuddyAddText: {
-        color: Colors.primary,
-        fontSize: deviceType === 'Tablet' ? '7.5rem' : '13rem',
-        fontFamily: 'GTWalsheimProMedium',
-        lineHeight: deviceType === 'Tablet' ? '18rem' : '30rem',
-    },
-    DrawerBody: {
-        borderTopWidth: 1,
-        borderTopColor: 'rgba(255, 255, 255, 0.1)',
-    },
-    requestBtn: {
-        alignItems: 'flex-end',
-        paddingVertical: deviceType === 'Tablet' ? '8rem' : '14rem',
-        paddingHorizontal: deviceType === 'Tablet' ? '14rem' : '20rem',
-    },
-    requestBtnText: {
-        color: Colors.primary,
-        fontFamily: 'GTWalsheimProMedium',
-    },
-    emptyText: {
-        textAlign: 'center',
-        paddingVertical: deviceType === 'Tablet' ? '18rem' : '30rem',
-    },
-    rowBack: {
-        flex: 1,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'flex-end',
-        borderBottomWidth: 1,
-    },
-    rowDeleteBtn: {
-        height: deviceType === 'Tablet' ? '63rem' : '90rem',
-        width: deviceType === 'Tablet' ? '63rem' : '90rem',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: '#ED3833',
-    },
-    rowDeleteBtnIcon: {
-        fontSize: deviceType === 'Tablet' ? '14rem' : '20rem',
-        color: '#fff',
-        opacity: 0.65
-    }
-})
+    ContactImg: { width: '48rem', height: '48rem', borderRadius: '24rem', marginRight: '14rem' },
+    ContactInfo: { flex: 1 },
+    ContactName: { fontSize: '16rem', fontFamily: 'GTWalsheimProBold', color: '#FFFFFF', marginBottom: '2rem' },
+    ContactPhone: { fontSize: '12rem', fontFamily: 'GTWalsheimProRegular', color: 'rgba(255,255,255,0.4)' },
+});
 
 export default HomeScreen;

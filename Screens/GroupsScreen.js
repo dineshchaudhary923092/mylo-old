@@ -6,7 +6,7 @@ import Octicons from 'react-native-vector-icons/Octicons';
 import Entypo from 'react-native-vector-icons/Entypo';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
-import CloseIcon from '../assets/close.svg';
+import Feather from 'react-native-vector-icons/Feather';
 import { SwipeListView, SwipeRow } from 'react-native-swipe-list-view';
 import * as Animatable from 'react-native-animatable';
 import Animated from 'react-native-reanimated';
@@ -22,54 +22,19 @@ import { KeyboardAwareScrollView } from '@codler/react-native-keyboard-aware-scr
 let deviceType = getDeviceType();
 
 const GroupsScreen = ({ navigation, socket }) => {
-
     const theme = useTheme();
     const { colors } = useTheme();
-
     const isFocused = useIsFocused();
     const bsPop = useRef(null);
     const [fall, setFall] = useState(new Animated.Value(1));
     const [groupData, setGroupData] = useState(null);
     const [GroupToRemove, SetGroupToRemove] = useState(null);
 
-    const [
-        getData, 
-        responseData, 
-        setResponseData, 
-        responseType, 
-        response, 
-        setResponse, 
-        _getUserData, 
-        userData, 
-        setUserData, 
-        isData
-    ] = useAxios();  
-
-
     useEffect(() => {
-        if(responseType === 'deleteGroup' || responseType === 'leaveGroup') {
-            if(responseData.error === 1) {
-                setGroupData(null);
-                getGroupData();
-            } else {
-                setResponse(false);
-            }
+        if (isFocused) {
+            getGroupData();
         }
-    }, [responseData]);
-
-    useEffect(() => {
-        // getUserData removed - not needed for design showcase
-    }, [])
-    
-    useEffect(() => {
-        if (bsPop.current) {
-            bsPop.current.snapTo(1);
-        }
-        setGroupData(null);
-        getGroupData();
     }, [isFocused])
-
-    // console.log(groupData)
     
     const getGroupData = async() => {
         setGroupData([
@@ -78,7 +43,7 @@ const GroupsScreen = ({ navigation, socket }) => {
                 displayId: 1,
                 displayIdEnc: 'dummy-enc-1',
                 displayName: 'Weekend Crew 🏖️',
-                displayImage: null,
+                displayImage: 'https://images.unsplash.com/photo-1539193593-70829d1e5d85?q=80&w=200&auto=format&fit=crop',
                 isOwner: 'yes',
                 lastSeenDetailed: { customFormat: '30m' },
                 message: { text: 'Are we still on for Saturday?', fromUserName: 'You', isOwner: 'yes' },
@@ -88,452 +53,218 @@ const GroupsScreen = ({ navigation, socket }) => {
                 id: 2,
                 displayId: 2,
                 displayIdEnc: 'dummy-enc-2',
-                displayName: 'Work Lunch Group',
-                displayImage: null,
+                displayName: 'Design Enthusiasts',
+                displayImage: 'https://images.unsplash.com/photo-1558655146-d09347e92766?q=80&w=200&auto=format&fit=crop',
                 isOwner: 'no',
                 lastSeenDetailed: { customFormat: '2h' },
-                message: { text: 'Pizza place at 1pm?', fromUserName: 'Sarah', isOwner: 'no' },
+                message: { text: 'Check out this glassmorphic layout!', fromUserName: 'Sarah', isOwner: 'no' },
                 messageCount: 4
             },
             {
                 id: 3,
                 displayId: 3,
                 displayIdEnc: 'dummy-enc-3',
-                displayName: 'Hiking Buddies 🏔️',
-                displayImage: null,
+                displayName: 'Hiker Community 🏔️',
+                displayImage: 'https://images.unsplash.com/photo-1551632811-561732d1e306?q=80&w=200&auto=format&fit=crop',
                 isOwner: 'no',
                 lastSeenDetailed: { customFormat: '1d' },
-                message: { text: 'Trail map is shared. See you Sunday!', fromUserName: 'Mike', isOwner: 'no' },
+                message: { text: 'Trail map shared. See you Sunday!', fromUserName: 'Mike', isOwner: 'no' },
                 messageCount: 2
+            },
+            {
+                id: 4,
+                displayId: 4,
+                displayIdEnc: 'dummy-enc-4',
+                displayName: 'Tech Talk JP',
+                displayImage: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?q=80&w=200&auto=format&fit=crop',
+                isOwner: 'no',
+                lastSeenDetailed: { customFormat: '3d' },
+                message: { text: 'New API docs are live now.', fromUserName: 'Yuki', isOwner: 'no' },
+                messageCount: 0
             },
         ]);
     }
 
-    const matchLocals = async(data) => {
-        await AsyncStorage.getItem('localContacts').then((value) => {
-            value = value != null ? JSON.parse(value) : null;
-            // console.log(value);
-            if(value != null) {
-                for (var i = 0; i < value.length; i++) {
-                    for (var j = 0; j < JSON.stringify(data.length); j++) {
-                        if(typeof data[j].message.isOwner=="undefined"){
-                            continue;
-                        }
-                        else if(data[j].message.isOwner=="yes"){
-                            data[j].message.fromUserName = "Me";
-                        }
-                        else if (value[i].idNormal == data[j].message.from_id) {
-                            data[j].message.fromUserName = value[i].name;
-                        } 
-                    }
-                }
-            }
-        })
-        setGroupData(data);
-    }
-
-
-
-    const deleteGroup = (groupId, type) => {
-        setGroupData(prev => {
-            if (Array.isArray(prev)) {
-                return prev.filter(g => g.id !== groupId);
-            }
-            return prev;
-        });
-    }
-
-    const searchInputChange = (value) => {
-        // Do nothing in mock mode to let it simulate simple without emit errors
+    const deleteGroup = (groupId) => {
+        setGroupData(prev => prev.filter(g => g.id !== groupId));
     }
 
     const confirmPop = () => (
-        <View style={{minHeight: '100%', backgroundColor: colors.sheet}}>
-            <View style={styles.ConfirmPop}> 
-                <Text style={[styles.ConfirmPopText, {color: colors.text}]}>Are you sure you want to  
-                    {
-                        GroupToRemove != null ? 
-                        GroupToRemove.admin === 'yes' ?
-                        ' delete ' + GroupToRemove.name 
-                        : ' leave ' + GroupToRemove.name 
-                        : 'Group'
-                    }?
+        <View style={styles.BottomSheetContainer}>
+            <View style={styles.BsCard}>
+                <View style={styles.BsIndicator} />
+                <Text style={styles.BsTitle}>
+                    {GroupToRemove?.isOwner === 'yes' ? 'Delete Group' : 'Leave Group'}
                 </Text>
-                <View style={styles.ConfirmPopActionsRight}>
-                    <TouchableOpacity
-                        onPress={() => bsPop.current.snapTo(1)}
-                    >
-                        <View style={[styles.ConfirmPopBtn, { backgroundColor: colors.primary, }]}>
-                            <Text style={styles.ConfirmPopBtnText}>Cancel</Text>
-                        </View>
+                <Text style={styles.BsSubtitle}>
+                    {GroupToRemove?.isOwner === 'yes' 
+                        ? `Are you sure you want to delete ${GroupToRemove?.displayName}? This will remove it for all members.`
+                        : `Are you sure you want to leave ${GroupToRemove?.displayName}?`}
+                </Text>
+                
+                <View style={styles.BsActionRow}>
+                    <TouchableOpacity style={styles.BsCancelBtn} onPress={() => bsPop.current.snapTo(1)}>
+                        <Text style={styles.BsCancelBtnText}>Cancel</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity
+                    <TouchableOpacity 
+                        style={styles.BsDeleteBtn} 
                         onPress={() => {
-                            GroupToRemove.admin === 'no' ?
-                            deleteGroup(GroupToRemove.id, 'user') :
-                            deleteGroup(GroupToRemove.id, 'admin') 
+                            deleteGroup(GroupToRemove.id);
                             bsPop.current.snapTo(1);
                             SetGroupToRemove(null);
                         }}
                     >
-                        <View style={[styles.ConfirmPopBtn, styles.ConfirmPopBtnVar]}>
-                            <Text style={[styles.ConfirmPopBtnText, { color: '#fff' }]}>Confirm</Text>
-                        </View>
+                        <Text style={styles.BsDeleteBtnText}>Confirm</Text>
                     </TouchableOpacity>
                 </View>
             </View>
         </View>
     );
 
-    const deleteGroupPop = (group) => {
-        SetGroupToRemove(group);
-        bsPop.current.snapTo(0); 
-    }
-
-    return (
-        <View style={[styles.Container, {backgroundColor: colors.background}]}>
-            <BottomSheet
-                ref={bsPop}
-                snapPoints={[
-                    deviceType === 'Tablet' ?
-                    EStyleSheet.value('85rem') :
-                    EStyleSheet.value('125rem'), 0
-                ]}
-                renderContent={confirmPop}
-                enabledGestureInteraction={Platform.OS === 'android' ? false : true}
-                initialSnap={1}
-                callbackNode={fall}
-                onCloseEnd={() => {
-                }}
-            />
-            <KeyboardAwareScrollView keyboardShouldPersistTaps='always' enableOnAndroid={true} enableAutomaticScroll={true} style={{flex: 1}}>
-                <View 
-                    style={{
-                        paddingBottom: 
-                        deviceType === 'Tablet' ? 
-                        EStyleSheet.value('7rem') :
-                        EStyleSheet.value('10rem')
-                    }}
-                    animation="slideInDown"
-                    easing="ease-out"
-                    duration={300}
-                >
-                    <View style={[styles.FormInputFieldStyle, {backgroundColor: colors.lighter}]}>
-                        <Octicons 
-                            name="search" 
-                            size={
-                                deviceType === 'Tablet' ? 
-                                EStyleSheet.value('12rem') :
-                                EStyleSheet.value('18rem')
-                            } 
-                            color={colors.pText} 
-                            style={{
-                                width: deviceType === 'Tablet' ? 
-                                EStyleSheet.value('16rem') :
-                                EStyleSheet.value('25rem'),  
-                                alignSelf: 'center'
-                            }} 
-                        />
-                        <TextInput
-                            autoCapitalize='none'
-                            autoCorrect={false}
-                            style={[styles.FormTextInputStyle, {color: colors.pText}]}
-                            placeholder="Search..."
-                            placeholderTextColor={colors.light}
-                            keyboardAppearance="dark"
-                            onChangeText={(value) => searchInputChange(value)}
-                        />
+    const renderGroupItem = ({ item }) => (
+        <SwipeRow 
+            rightOpenValue={item.isOwner === 'yes' ? EStyleSheet.value('-180rem') : EStyleSheet.value('-90rem')}
+            disableRightSwipe={true}
+        >
+            <View style={styles.RowBack}>
+                <View style={styles.RowBackActions}>
+                    {item.isOwner === 'yes' && (
+                        <TouchableOpacity 
+                            style={styles.EditAction}
+                            onPress={() => navigation.navigate('ManageGroup', { type: 'Edit', groupId: item.displayIdEnc })}
+                        >
+                            <Feather name="edit-3" size={24} color="#FFFFFF" />
+                        </TouchableOpacity>
+                    )}
+                    <TouchableOpacity 
+                        style={styles.DeleteAction} 
+                        onPress={() => { SetGroupToRemove(item); bsPop.current.snapTo(0); }}
+                    >
+                        <Feather name={item.isOwner === 'yes' ? "trash-2" : "log-out"} size={24} color="#FFFFFF" />
+                    </TouchableOpacity>
+                </View>
+            </View>
+            <TouchableHighlight 
+                onPress={() => navigation.navigate('Chat', { cData: item, chatType: 'cgrp' })}
+                underlayColor="rgba(255,255,255,0.05)"
+                style={styles.ListCard}
+            >
+                <View style={styles.GroupRow}>
+                    <View style={styles.AvatarContainer}>
+                        <Image source={{ uri: item.displayImage }} style={styles.Avatar} />
+                        {item.isOwner === 'yes' && (
+                            <View style={styles.AdminBadge}>
+                                <Text style={styles.AdminText}>Admin</Text>
+                            </View>
+                        )}
+                    </View>
+                    <View style={styles.GroupInfo}>
+                        <View style={styles.GroupTop}>
+                            <Text style={styles.GroupName} numberOfLines={1}>{item.displayName}</Text>
+                            <Text style={styles.Timestamp}>{item.lastSeenDetailed.customFormat}</Text>
+                        </View>
+                        <View style={styles.GroupBottom}>
+                            <Text style={[styles.LastMessage, item.messageCount > 0 && styles.UnreadText]} numberOfLines={1}>
+                                <Text style={styles.SenderName}>{item.message.fromUserName}: </Text>
+                                {item.message.text}
+                            </Text>
+                            {item.messageCount > 0 && (
+                                <View style={styles.UnreadBadge}>
+                                    <Text style={styles.UnreadCount}>{item.messageCount}</Text>
+                                </View>
+                            )}
+                        </View>
                     </View>
                 </View>
-                {
-                    groupData === null ?
-                    <View style={{paddingTop: EStyleSheet.value('50rem')}}>
-                        <ActivityIndicator color={colors.pText} size='large' />
-                    </View>
-                    :
-                    <>
-                        {
-                            groupData === 'empty' ?
-                            <View style={{flex: 1}}>
-                                <Text style={[styles.emptyText, {color: colors.pText}]}>No Groups Found</Text>
-                            </View> :
-                            <SwipeListView 
-                                style={styles.ListWrap}
-                                data={groupData}
-                                keyExtractor={ (item, index) => item.id ? item.id.toString() : index.toString() }
-                                ListFooterComponent={ () => {
-                                    return (
-                                        <View style={{height: 40}}></View>
-                                    )
-                                }}
-                                renderItem={ ({ item }, rowMap) => (
-                                    <SwipeRow
-                                        rightOpenValue={
-                                            item.isOwner === 'yes' ?
-                                            deviceType === 'Tablet' ? 
-                                            EStyleSheet.value('-126rem') :
-                                            EStyleSheet.value('-180rem') :
-                                            deviceType === 'Tablet' ? 
-                                            EStyleSheet.value('-63rem') :
-                                            EStyleSheet.value('-90rem')
-                                        }
-                                    >
-                                        <View style={[styles.rowBack, {backgroundColor: colors.background, borderBottomColor: colors.lighter}]}>
-                                            <TouchableOpacity 
-                                                style={[styles.rowEditBtn, {display: item.isOwner === 'no' ? 'none' : 'flex'}]}
-                                                onPress={() => {
-                                                    navigation.navigate('ManageGroup', {
-                                                        type: 'Edit',
-                                                        groupId: item.displayIdEnc
-                                                    })
-                                                }}
-                                            >
-                                                <AntDesign name="edit" style={styles.rowEditBtnIcon} />
-                                            </TouchableOpacity>
-                                            <TouchableOpacity 
-                                                style={styles.rowDeleteBtn}
-                                                onPress={() => {
-                                                    item.isOwner === 'no' ?
-                                                    deleteGroupPop(item) :
-                                                    deleteGroupPop(item) 
-                                                }}
-                                            >
-                                                <FontAwesome5 name="trash-alt" style={styles.rowDeleteBtnIcon} />
-                                            </TouchableOpacity>
-                                        </View>
-                                        <TouchableHighlight 
-                                            style={[styles.ListItem, {backgroundColor: colors.background, borderBottomColor: colors.lighter}]}
-                                            underlayColor={theme.dark ? "#282C34" : '#d1d1d1'}
-                                            onPress={()=> navigation.navigate('Chat', {
-                                                cData: item,
-                                                chatType: 'cgrp'
-                                            })}
-                                        >
-                                            <>
-                                                <View style={styles.ListItemBody}>
-                                                    <View style={{position: 'relative'}}>
-                                                        <Image 
-                                                            source={require('../assets/profile-user.png')} 
-                                                            resizeMode='cover' 
-                                                            style={styles.ListItemImg}
-                                                        />
-                                                    </View>  
-                                                    <View style={styles.ListItemTextWrap}>
-                                                    <View style={[styles.ListItemInner, {
-                                                            marginBottom: 
-                                                            deviceType === 'Tablet' ?
-                                                            EStyleSheet.value('2rem') :
-                                                            EStyleSheet.value('4rem')
-                                                        }]}>
-                                                            <Text ellipsizeMode='tail' numberOfLines={1} style={[styles.ListItemText, {color: colors.pText}]}>
-                                                                {item.displayName}
-                                                            </Text>
-                                                            <Text style={[styles.ListItemSmText, {color: colors.text}]}>{item.lastSeenDetailed.customFormat}</Text>
-                                                        </View>
-                                                        <View style={styles.ListItemInner}>
-                                                            {
-                                                                typeof item.message.fromUserName === 'undefined' ? 
-                                                                <Text ellipsizeMode='tail' numberOfLines={2} style={[styles.ListItemChatText, {color: colors.text}]}>
-                                                                    Be the first one to send message
-                                                                </Text> 
-                                                                : 
-                                                                <Text 
-                                                                    ellipsizeMode='tail' 
-                                                                    numberOfLines={2} 
-                                                                    style={[
-                                                                        styles.ListItemChatText, 
-                                                                        item.messageCount === 0 ? null : styles.ListItemChatTextVar,
-                                                                        {color: colors.text}
-                                                                    ]}
-                                                                >
-                                                                    <Text style={styles.ListItemTextBold}>{item.message.fromUserName.split(' ')[0]}: </Text>
-                                                                    {item.message.text}  
-                                                                </Text>
-                                                            }
-                                                            {
-                                                                item.messageCount === 0 ? null :
-                                                                <View style={[styles.ListItemCount, {backgroundColor: colors.primary}]}>    
-                                                                    <Text style={[styles.ListItemCountText, {color: colors.black}]}>{item.messageCount}</Text>
-                                                                </View>
-                                                            }
-                                                        </View>
-                                                    </View>
-                                                </View>
-                                            </>
-                                        </TouchableHighlight>      
-                                    </SwipeRow>
-                                )}                            
-                            />    
-                        }
-                    </>
-                }
-            </KeyboardAwareScrollView>
+            </TouchableHighlight>
+        </SwipeRow>
+    );
+
+    return (
+        <View style={styles.Container}>
+            <BottomSheet
+                ref={bsPop}
+                snapPoints={[EStyleSheet.value('300rem'), 0]}
+                renderContent={confirmPop}
+                enabledGestureInteraction={true}
+                initialSnap={1}
+                callbackNode={fall}
+            />
+            
+            {groupData === null ? (
+                <View style={styles.Center}>
+                    <ActivityIndicator color={colors.primary} size='large' />
+                </View>
+            ) : (
+                <SwipeListView 
+                    data={groupData}
+                    keyExtractor={item => item.displayId.toString()}
+                    renderItem={renderGroupItem}
+                    showsVerticalScrollIndicator={false}
+                    contentContainerStyle={styles.ListContent}
+                />
+            )}
         </View>
     )
 }
 
 const styles = EStyleSheet.create({
-    Container: {
-        flex: 1,
+    Container: { flex: 1, backgroundColor: 'transparent' },
+    Center: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingTop: '100rem' },
+    ListContent: { paddingHorizontal: '20rem', paddingBottom: '40rem' },
+    ListCard: {
+        backgroundColor: 'rgba(255,255,255,0.035)', borderRadius: '24rem',
+        marginBottom: '12rem', padding: '16rem', borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)',
     },
-    FormInputFieldStyle: {
-		flexDirection: 'row',
-        height: deviceType === 'Tablet' ? '26rem' : '40rem',
-        borderRadius: deviceType === 'Tablet' ? '7rem' : '10rem',
-        paddingLeft: deviceType === 'Tablet' ? '9rem' : '14rem',
-        marginHorizontal: deviceType === 'Tablet' ? '14rem' : '20rem',
-        marginTop: deviceType === 'Tablet' ? '7rem' : '10rem',
-        backgroundColor: Colors.gray
+    GroupRow: { flexDirection: 'row', alignItems: 'center' },
+    AvatarContainer: { position: 'relative' },
+    Avatar: { width: '56rem', height: '56rem', borderRadius: '20rem', backgroundColor: 'rgba(255,255,255,0.05)' },
+    AdminBadge: {
+        position: 'absolute', bottom: '-4rem', right: '-4rem',
+        backgroundColor: '#7FFFD4', paddingHorizontal: '6rem', paddingVertical: '2rem',
+        borderRadius: '8rem', borderWidth: 2, borderColor: '#09090B',
     },
-    FormTextInputStyle: {
-        flex: 1,
-        fontFamily: 'GTWalsheimProRegular',
-        fontSize: deviceType === 'Tablet' ? '12rem' : '15rem',
+    AdminText: { fontSize: '8rem', fontFamily: 'GTWalsheimProBold', color: '#111214', textTransform: 'uppercase' },
+    GroupInfo: { flex: 1, marginLeft: '16rem' },
+    GroupTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4rem' },
+    GroupName: { fontSize: '17rem', fontFamily: 'GTWalsheimProBold', color: '#FFFFFF', flex: 1, marginRight: '8rem' },
+    Timestamp: { fontSize: '11rem', fontFamily: 'GTWalsheimProRegular', color: 'rgba(255,255,255,0.3)' },
+    GroupBottom: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+    LastMessage: { fontSize: '14rem', fontFamily: 'GTWalsheimProRegular', color: 'rgba(255,255,255,0.5)', flex: 1, marginRight: '10rem' },
+    SenderName: { fontFamily: 'GTWalsheimProMedium', color: 'rgba(255,255,255,0.7)' },
+    UnreadText: { color: '#FFFFFF', fontFamily: 'GTWalsheimProMedium' },
+    UnreadBadge: {
+        backgroundColor: '#7FFFD4', height: '22rem', minWidth: '22rem',
+        borderRadius: '11rem', alignItems: 'center', justifyContent: 'center', paddingHorizontal: '6rem',
     },
-    HeadingWrap: {
-        height: deviceType === 'Tablet' ? '50rem' : '75rem',
-        marginHorizontal: deviceType === 'Tablet' ? '14rem' : '20rem',
-        justifyContent: 'center',
-        paddingHorizontal: deviceType === 'Tablet' ? '14rem' : '20rem',
-        borderRadius: deviceType === 'Tablet' ? '8rem' : '12rem',
-        backgroundColor: Colors.primary,
-        marginVertical: deviceType === 'Tablet' ? '7rem' : '10rem',
+    UnreadCount: { fontSize: '11rem', fontFamily: 'GTWalsheimProBold', color: '#09090B' },
+    RowBack: {
+        backgroundColor: '#FF4E4E', borderRadius: '24rem', height: '88rem',
+        justifyContent: 'center', alignItems: 'flex-end', marginBottom: '12rem', overflow: 'hidden',
     },
-    HeadingWrapText: {
-        fontSize: deviceType === 'Tablet' ? '18rem' : '28rem',
-        fontFamily: 'GTWalsheimProBold',
-        color: Colors.dark
+    RowBackActions: { flexDirection: 'row', height: '100%' },
+    EditAction: { width: '90rem', height: '100%', alignItems: 'center', justifyContent: 'center', backgroundColor: '#7FFFD4' },
+    DeleteAction: { width: '90rem', height: '100%', alignItems: 'center', justifyContent: 'center' },
+    // BottomSheet
+    BottomSheetContainer: { paddingHorizontal: '16rem', paddingBottom: '20rem' },
+    BsCard: {
+        backgroundColor: '#16171B', borderRadius: '32rem', padding: '24rem',
+        borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)',
     },
-    ListItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        borderBottomWidth: '1rem',
-        paddingHorizontal: deviceType === 'Tablet' ? '14rem' : '20rem',
-        height: deviceType === 'Tablet' ? '63rem' : '90rem'
+    BsIndicator: { width: '40rem', height: '5rem', borderRadius: '3rem', backgroundColor: 'rgba(255,255,255,0.15)', alignSelf: 'center', marginBottom: '20rem' },
+    BsTitle: { fontSize: '20rem', fontFamily: 'GTWalsheimProBold', color: '#FFFFFF', textAlign: 'center', marginBottom: '8rem' },
+    BsSubtitle: { fontSize: '14rem', fontFamily: 'GTWalsheimProRegular', color: 'rgba(255,255,255,0.4)', textAlign: 'center', marginBottom: '28rem', lineHeight: '20rem' },
+    BsActionRow: { flexDirection: 'row', justifyContent: 'space-between' },
+    BsCancelBtn: {
+        flex: 1, height: '54rem', borderRadius: '27rem',
+        backgroundColor: 'rgba(255,255,255,0.06)', alignItems: 'center', justifyContent: 'center', marginRight: '12rem',
     },
-    ListItemBody: {
-        flexDirection: 'row',
-        alignItems: 'center',
+    BsCancelBtnText: { fontSize: '15rem', fontFamily: 'GTWalsheimProBold', color: '#FFFFFF' },
+    BsDeleteBtn: {
+        flex: 1, height: '54rem', borderRadius: '27rem',
+        backgroundColor: '#FF4E4E', alignItems: 'center', justifyContent: 'center',
     },
-    ListItemImg: {
-        height: deviceType === 'Tablet' ? '42rem' : '60rem',
-        width: deviceType === 'Tablet' ? '42rem' : '60rem',
-        borderRadius: deviceType === 'Tablet' ? '21rem' : '30rem',
-    },
-    ListItemTextWrap: {
-        marginLeft: deviceType === 'Tablet' ? '8rem' : '12rem',
-        flex: 1
-    },
-    ListItemInner: {
-        flexDirection: 'row',
-        alignItems: 'flex-start',
-        justifyContent: 'space-between',
-    },
-    ListItemText: {
-        fontFamily: 'GTWalsheimProBold',
-        fontSize: deviceType === 'Tablet' ? '10.5rem' : '15rem',
-        maxWidth: '65%',
-        textTransform: 'capitalize'
-    },
-    ListItemChatText: {
-        fontSize: deviceType === 'Tablet' ? '10rem' : '13rem',
-        lineHeight: deviceType === 'Tablet' ? '16rem' : '20rem',
-        fontFamily: 'GTWalsheimProRegular',
-        maxWidth: '86%',
-    },
-    ListItemChatTextVar: {
-        fontFamily: 'GTWalsheimProBold',
-    },
-    ListItemSmText: {
-        fontSize: deviceType === 'Tablet' ? '8rem' : '12rem',
-        textTransform: 'capitalize', 
-        fontFamily: 'GTWalsheimProLight',
-        letterSpacing: '0.5rem'
-    },
-    ListItemCount: {
-        height: deviceType === 'Tablet' ? '17.5rem' : '25rem',
-        width: deviceType === 'Tablet' ? '17.5rem' : '25rem',
-        borderRadius: deviceType === 'Tablet' ? '9rem' : '12.5rem',
-        alignItems: 'center',
-        justifyContent: 'center'
-    },
-    ListItemCountText: {
-        fontSize: deviceType === 'Tablet' ? '8rem' : '12rem',
-        lineHeight: deviceType === 'Tablet' ? '17.5rem' : '25rem',
-        fontFamily: 'GTWalsheimProMedium',
-    },
-    ListItemTextBold: {
-        fontFamily: 'GTWalsheimProMedium',
-    },
-    emptyText: {
-        textAlign: 'center',
-        paddingVertical: deviceType === 'Tablet' ? '18rem' : '30rem',
-    },
-    rowBack: {
-        flex: 1,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'flex-end',
-        borderBottomWidth: '1rem'
-    },
-    rowEditBtn: {
-        height: deviceType === 'Tablet' ? '63rem' : '90rem',
-        width: deviceType === 'Tablet' ? '63rem' : '90rem',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: Colors.primary
-    },
-    rowEditBtnIcon: {
-        fontSize: deviceType === 'Tablet' ? '16rem' : '24rem',
-        color: '#000',
-        opacity: 0.65
-    },
-    rowDeleteBtn: {
-        height: deviceType === 'Tablet' ? '63rem' : '90rem',
-        width: deviceType === 'Tablet' ? '63rem' : '90rem',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: '#ED3833',
-    },
-    rowDeleteBtnIcon: {
-        fontSize: deviceType === 'Tablet' ? '12rem' : '18rem',
-        color: '#fff',
-        opacity: 0.65
-    },
-    ConfirmPop: {
-        padding: deviceType === 'Tablet' ? '14rem' : '20rem'
-    },
-    BottomSheet: {
-        paddingTop: deviceType === 'Tablet' ? '12rem' : '16rem',
-        height: '100%',
-        borderTopLeftRadius: deviceType === 'Tablet' ? '14rem' : '20rem',
-        borderTopRightRadius: deviceType === 'Tablet' ? '14rem' : '20rem',
-    },
-    ConfirmPopText: {
-        fontFamily: 'GTWalsheimProRegular',
-        fontSize: deviceType === 'Tablet' ? '12rem' : '18rem',
-        paddingBottom: deviceType === 'Tablet' ? '10.5rem' : '15rem',
-    },
-    ConfirmPopActionsRight: {
-        flexDirection: 'row',
-        justifyContent: 'flex-end',
-        marginRight: deviceType === 'Tablet' ? '7rem' : '10rem',
-    },
-    ConfirmPopBtn: {
-        paddingVertical: deviceType === 'Tablet' ? '4rem' : '6rem',
-        paddingHorizontal: deviceType === 'Tablet' ? '8rem' : '12rem',
-        marginLeft: deviceType === 'Tablet' ? '5rem' : '8rem',
-        borderRadius: deviceType === 'Tablet' ? '5rem' : '8rem'
-    },
-    ConfirmPopBtnText: {
-        fontFamily: 'GTWalsheimProMedium',
-        fontSize: deviceType === 'Tablet' ? '10.5rem' : '15rem',
-    },
-    ConfirmPopBtnVar: {
-        backgroundColor: '#CD2F2A'
-    },
-})
+    BsDeleteBtnText: { fontSize: '15rem', fontFamily: 'GTWalsheimProBold', color: '#FFFFFF' },
+});
 
 export default GroupsScreen;
-

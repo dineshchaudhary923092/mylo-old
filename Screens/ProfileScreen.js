@@ -1,637 +1,438 @@
 import React, { useState, useContext, useEffect, useRef } from 'react';
 import * as Animatable from 'react-native-animatable';
-import { Text, View, Image, Dimensions, TouchableOpacity, ActivityIndicator, Switch, ScrollView, FlatList } from 'react-native';
+import { Text, View, Image, Dimensions, TouchableOpacity, ActivityIndicator, Switch, ScrollView, FlatList, Platform, StyleSheet } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '../Constants/Colors';
 import StatusBarComponent from '../Components/StatusbarComponent';
-import { Api } from '../Constants/Api';
-import NotificationIcon from '../assets/notification.svg';
-import EditIcon from '../assets/edit-user.svg';
-import KeyIcon from '../assets/key.svg';
-import LogoutIcon from '../assets/logout.svg';
-import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
-import Feather from 'react-native-vector-icons/Feather';
-import AntDesign from 'react-native-vector-icons/AntDesign';
-import { AuthContext } from '../Components/Context';
-import AsyncStorage from '@react-native-community/async-storage';
 import { useIsFocused } from '@react-navigation/native';
-import BottomSheet from 'reanimated-bottom-sheet';
-import Animated, { color } from 'react-native-reanimated';
-import { showMessage } from "react-native-flash-message";
-import ImagePicker from 'react-native-image-crop-picker';
 import useAxios from '../Hooks/useAxios';
-const axios = require('axios');
+import AntDesign from 'react-native-vector-icons/AntDesign';
+import Feather from 'react-native-vector-icons/Feather';
 import { useTheme } from '@react-navigation/native';
 import { getDeviceType } from 'react-native-device-info';
 import EStyleSheet from 'react-native-extended-stylesheet';
+import LinearGradient from 'react-native-linear-gradient';
+import Svg, { Defs, RadialGradient, Rect, Stop } from 'react-native-svg';
+import BottomSheet from 'reanimated-bottom-sheet';
+import Animated from 'react-native-reanimated';
 
 let deviceType = getDeviceType();
 
 const ProfileScreen = ({ navigation }) => {
-
+    const insets = useSafeAreaInsets();
     const theme = useTheme();
     const { colors } = useTheme();
-
     const isFocused = useIsFocused();
-
-    const { logout, toggleTheme } = useContext(AuthContext);
-    const [isLoading, setIsLoading] = useState(true);
-    const [isEnabled, setIsEnabled] = useState(theme.dark ? true : false);
-    const [notifyMe, setNotifyMe] = useState(null);
 
     const bs = useRef(null);
     const bsPop = useRef(null);
     const [fall, setFall] = useState(new Animated.Value(1));
+    const [isLoading, setIsLoading] = useState(false);
     const [distance, setDistance] = useState([
-        {
-            dist: 2,
-            selected: false
-        },
-        {
-            dist: 10,
-            selected: false
-        },
-        {
-            dist: 20,
-            selected: false
-        },
-        {
-            dist: 50,
-            selected: false
-        },
+        { id: 1, dist: 5, selected: true },
+        { id: 2, dist: 10, selected: false },
+        { id: 3, dist: 25, selected: false },
+        { id: 4, dist: 50, selected: false }
     ]);
 
-    const [
-        getData, 
-        responseData, 
-        setResponseData, 
-        responseType, 
-        response, 
-        setResponse, 
-        _getUserData, 
-        userData, 
-        setUserData, 
-        isData
-    ] = useAxios();  
-    
-    useEffect(() => {
-        if(isFocused) {
-            setIsLoading(true);
-            const dummyUser = {
-                data: {
-                    user: {
-                        name: 'Alex Johnson',
-                        phone: '+1 (555) 876-4521',
-                        image: null,
-                        notifyMe: '10'
-                    }
-                }
-            };
-            setUserData(dummyUser);
-            setIsLoading(false);
-        }
-    }, [isFocused])
-    
-    useEffect(() => {
-        setIsLoading(true);
-        const dummyUser = {
-            data: {
-                user: {
-                    name: 'Dummy User',
-                    phone: '+1234567890',
-                    image: '',
-                    notifyMe: '10'
-                }
-            }
-        };
-        setUserData(dummyUser);
-        if(dummyUser) {
-            setNotifyMe(parseInt(dummyUser.data.user.notifyMe));
-            const tempDist = [...distance];
-            tempDist.map(value => {
-                if(value.dist === parseInt(dummyUser.data.user.notifyMe)) {
-                    value.selected = true;
-                } else {
-                    value.selected = false;
-                }
-            })
-            setDistance(tempDist);
-            setIsLoading(false);
-        }
-    }, [])
-
-    const updateProfileImage = async(imgUri, imgType, imgSize) => {
-        // Bypassed for design showcase - no backend calls
-        showMessage({
-            message: 'Profile photo updated!',
-            type: 'success',
-            duration: 3000,
-            style: { backgroundColor: Colors.dark },
-            titleStyle: { color: Colors.primary, fontFamily: 'GTWalsheimProMedium' }
-        });
-    }
+    const [getData, responseData, setResponseData, responseType, response, setResponse, _getUserData, userData, setUserData, isData] = useAxios();
 
     useEffect(() => {
-        if(responseType === 'distance') {
-            console.log(responseData); 
-            if(responseData.error === 1) {
-                setNotifyMe(parseInt(responseData.data.distance));
-                const tempDist = [...distance];
-                const tempData = {...userData};
-                tempDist.map(value => {
-                    if(value.dist === parseInt(responseData.data.distance)) {
-                        value.selected = true;
-                        tempData.data.user.notifyMe = responseData.data.distance;
-                    } else {
-                        value.selected = false;
-                    }
-                })
-                setDistance(tempDist);
-                saveUserData(tempData);
-                if (bsPop.current) {
-                    bsPop.current.snapTo(1);
-                }
-            } else {
-                setResponse(false);
-            }
-        }
-    }, [responseData]);
-
-    const saveUserData = async(data) => {
-        try{
-            await AsyncStorage.setItem('userData', JSON.stringify(data));
-        } catch(e) {
-            console.log(e);
-        }
-    }
-
-    const takePhoto = () => {
-        ImagePicker.openCamera({
-            compressImageMaxWidth: 300,
-            compressImageMaxHeight: 300,
-            cropping: true,
-            compressImageQuality: 0.7
-        }).then(image => {
-            if (bs.current) {
-                bs.current.snapTo(1);
-            }
+        if (isFocused) {
+            // Simulated loading for premium feel
             setIsLoading(true);
-            updateProfileImage(image.path, image.mime, image.size);
-        });
-    }
-    
-    const chooseFromLibrary = () => {
-        ImagePicker.openPicker({
-            width: 300,
-            height: 300,
-            cropping: true,
-            compressImageQuality: 0.7
-        }).then(image => {
-            console.log(image);
-            if (bs.current) {
-                bs.current.snapTo(1);
-            }
-            setIsLoading(true);
-            updateProfileImage(image.path, image.mime, image.size);
-        });
-    }
+            setTimeout(() => setIsLoading(false), 600);
+        }
+    }, [isFocused]);
 
-    const renderContent = () => (
-        <View style={[styles.BottomSheet, {backgroundColor: colors.sheet}]}>
-            <Text style={[styles.ProfileName, {color: colors.pText}]}>Upload Photo</Text>
-            <Text style={[styles.ProfileEmail, {color: colors.text, opacity: 0.65}]}>Choose your Profile Picture</Text>
-            <TouchableOpacity 
-                style={styles.SubmitContainer}
-                onPress={() => chooseFromLibrary()}
-            >   
-                <Text style={styles.SubmitText}>Choose from Library</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-                style={styles.SubmitContainer}
-                onPress={() => takePhoto()}
-            >   
-                <Text style={styles.SubmitText}>Take Photo</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-                style={styles.SubmitContainer}
-                onPress={() => {
-                if (bs.current) {
-                    bs.current.snapTo(1);
-                }
-                }}
-            >   
-                <Text style={styles.SubmitText}>Cancel</Text>
-            </TouchableOpacity>
-        </View>
-    );
+    const changeDistance = (item) => {
+        setDistance(prev => prev.map(d => ({ ...d, selected: d.id === item.id })));
+    };
 
-    const renderHeader = () => (
-        <View style={styles.bsHeader}>
-            <View style={[styles.bsHandle, {backgroundColor: colors.pText}]} />
-        </View>
-    )
+    const renderAvatarSheet = () => (
+        <View style={styles.BottomSheetContainer}>
+            <View style={styles.BsContentCard}>
+                <View style={styles.BsIndicator} />
+                <Text style={styles.BsTitle}>Profile Picture</Text>
+                <Text style={styles.BsSubtitle}>Choose how you want to update your photo</Text>
+                
+                <View style={styles.AvatarOptionsGrid}>
+                    <TouchableOpacity style={styles.AvatarOptionItem} activeOpacity={0.8} onPress={() => takePhoto()}>
+                        <View style={[styles.AvatarIconCircle, { backgroundColor: 'rgba(127,255,212,0.1)' }]}>
+                            <Feather name="camera" size={24} color="#7FFFD4" />
+                        </View>
+                        <Text style={styles.AvatarOptionLabel}>Camera</Text>
+                    </TouchableOpacity>
+                    
+                    <TouchableOpacity style={styles.AvatarOptionItem} activeOpacity={0.8} onPress={() => chooseFromLibrary()}>
+                        <View style={[styles.AvatarIconCircle, { backgroundColor: 'rgba(255,255,255,0.06)' }]}>
+                            <Feather name="image" size={24} color="#FFFFFF" />
+                        </View>
+                        <Text style={styles.AvatarOptionLabel}>Gallery</Text>
+                    </TouchableOpacity>
 
-    const toggleSwitch = () => {
-        toggleTheme();
-        setIsEnabled(previousState => !previousState);
-    }
+                    <TouchableOpacity style={styles.AvatarOptionItem} activeOpacity={0.8} onPress={() => bs.current.snapTo(1)}>
+                        <View style={[styles.AvatarIconCircle, { backgroundColor: 'rgba(255,78,78,0.08)' }]}>
+                            <Feather name="trash-2" size={24} color="#FF4E4E" />
+                        </View>
+                        <Text style={[styles.AvatarOptionLabel, { color: '#FF4E4E' }]}>Remove</Text>
+                    </TouchableOpacity>
+                </View>
 
-    const confirmPop = () => (
-        <View style={{minHeight: '100%', backgroundColor: colors.sheet}}>
-            <View style={styles.ConfirmPop}> 
-                <Text style={[styles.ConfirmPopText, {color: colors.text}]}>Select Notification Distance</Text>
-                <FlatList 
-                    style={[styles.ListWrap, {borderColor: colors.light}]}
-                    data={distance}
-                    keyExtractor={ (item, index) => item.dist ? item.dist.toString() : index.toString() }
-                    horizontal={true}
-                    renderItem={ ({ item, index }) => {
-                        return (
-                            <TouchableOpacity 
-                                style={[styles.DistanceBtn, {
-                                    backgroundColor: item.selected ? colors.primary : colors.lighter,
-                                    borderRightColor: index === 3 ? 'rgba(0,0,0,0)' : colors.light
-                                }]}
-                                onPress={() => changeDistance(item)}
-                            >
-                                <Text style={[styles.DistanceBtnText, {color: item.selected ? Colors.dark : colors.light  }]}>{item.dist}</Text>
-                            </TouchableOpacity>
-                        )
-                    }}
-                />  
+                <TouchableOpacity 
+                    style={styles.BsCancelFullBtn}
+                    onPress={() => bs.current.snapTo(1)}
+                >
+                    <Text style={styles.BsCancelFullBtnText}>Cancel</Text>
+                </TouchableOpacity>
             </View>
         </View>
     );
 
-    const changeDistance = (distance) => {
-        setNotifyMe(parseInt(distance.dist));
-        const tempDist = [...distance];
-        const tempData = {...userData};
-        tempDist.map(value => {
-            if(value.dist === parseInt(distance.dist)) {
-                value.selected = true;
-                tempData.data.user.notifyMe = distance.dist;
-            } else {
-                value.selected = false;
-            }
-        })
-        setDistance(tempDist);
-        saveUserData(tempData);
-        if (bsPop.current) {
-            bsPop.current.snapTo(1);
-        }
-    }
+    const renderRadiusSheet = () => (
+        <View style={styles.BottomSheetContainer}>
+            <View style={styles.BsContentCard}>
+                <View style={styles.BsIndicator} />
+                <Text style={styles.BsTitle}>Alert Radius</Text>
+                <Text style={styles.BsSubtitle}>Select the distance (km) for proximity alerts</Text>
+                
+                <View style={styles.RadiusGrid}>
+                    {distance.map((item, index) => (
+                        <TouchableOpacity 
+                            key={index}
+                            activeOpacity={0.8}
+                            style={[
+                                styles.RadiusBox, 
+                                item.selected && styles.RadiusBoxActive
+                            ]}
+                            onPress={() => changeDistance(item)}
+                        >
+                            <Text style={[
+                                styles.RadiusBoxText, 
+                                item.selected && styles.RadiusBoxTextActive
+                            ]}>
+                                {item.dist}
+                            </Text>
+                            <Text style={[
+                                styles.RadiusUnit, 
+                                item.selected && styles.RadiusUnitActive
+                            ]}>KM</Text>
+                        </TouchableOpacity>
+                    ))}
+                </View>
+
+                <TouchableOpacity 
+                    style={styles.BsSubmitBtn}
+                    onPress={() => bsPop.current.snapTo(1)}
+                    activeOpacity={0.8}
+                >
+                    <Text style={styles.BsSubmitBtnText}>Confirm Settings</Text>
+                </TouchableOpacity>
+            </View>
+        </View>
+    );
 
     return (
-        <View style={[styles.Container, {backgroundColor: colors.background}]}>
+        <View style={styles.Screen}>
+            <LinearGradient
+                colors={['#0C1A14', '#09090B', '#09090B']}
+                start={{ x: 0.5, y: 0 }}
+                end={{ x: 0.5, y: 0.6 }}
+                style={styles.GradientBg}
+            />
+
+            <View style={styles.GlowBlob} pointerEvents="none">
+                <Svg width="500" height="500">
+                    <Defs>
+                        <RadialGradient id="glow" cx="50%" cy="50%" rx="50%" ry="50%">
+                            <Stop offset="0%" stopColor="#7FFFD4" stopOpacity="0.18" />
+                            <Stop offset="40%" stopColor="#7FFFD4" stopOpacity="0.08" />
+                            <Stop offset="100%" stopColor="#7FFFD4" stopOpacity="0" />
+                        </RadialGradient>
+                    </Defs>
+                    <Rect width="500" height="500" fill="url(#glow)" />
+                </Svg>
+            </View>
+
             <BottomSheet
                 ref={bs}
-                snapPoints={[
-                    screenHeight > 720 ? 
-                    deviceType === 'Tablet' ? 450 : 350 
-                    : 320, 0
-                ]}
-                renderContent={renderContent}
-                renderHeader={renderHeader}
-                enabledGestureInteraction={Platform.OS === 'android' ? false : true}
+                snapPoints={[EStyleSheet.value('320rem'), 0]}
+                renderContent={renderAvatarSheet}
+                enabledGestureInteraction={true}
                 initialSnap={1}
                 callbackNode={fall}
             />
             <BottomSheet
                 ref={bsPop}
-                snapPoints={[
-                    deviceType === 'Tablet' ?
-                    EStyleSheet.value('100rem') :
-                    EStyleSheet.value('150rem'), 0
-                ]}
-                renderContent={confirmPop}
-                enabledGestureInteraction={Platform.OS === 'android' ? false : true}
+                snapPoints={[EStyleSheet.value('360rem'), 0]}
+                renderContent={renderRadiusSheet}
+                enabledGestureInteraction={true}
                 initialSnap={1}
                 callbackNode={fall}
-                onCloseEnd={() => {
-                }}
             />
-            <StatusBarComponent bgcolor={colors.background} barStyle={theme.dark ? 'light' : 'dark'} />
-            {
-                isLoading ?
-                <View style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}>
-                    <ActivityIndicator size='large' color={colors.pText} style={{marginTop: EStyleSheet.value('30rem')}} />
-                </View> :
-                <Animatable.View animation="fadeIn" duration={800} style={{flex: 1}}>
-                    <ScrollView showsVerticalScrollIndicator={false}>
-                        <View style={[styles.TopBarStyle, {backgroundColor: colors.background}]}>
-                            <Text style={[styles.TopBarBtnText, {color: colors.text}]}>Profile Settings</Text>
-                            <TouchableOpacity onPress={()=> navigation.navigate('Home')} style={styles.BackBtnContainer}>
-                                <AntDesign name="arrowleft" style={[styles.BackBtn, {color: colors.text}]} />
-                            </TouchableOpacity>
-                        </View>
 
+            <StatusBarComponent bgcolor="transparent" barStyle="light-content" />
+
+            {isLoading ? (
+                <View style={styles.Center}>
+                    <ActivityIndicator size='large' color={'#7FFFD4'} />
+                </View>
+            ) : (
+                <Animatable.View animation="fadeIn" duration={800} style={{flex: 1}}>
+                    {/* Unified Header */}
+                    <View style={[styles.Header, { paddingTop: insets.top + (deviceType === 'Tablet' ? 8 : 12) }]}>
+                        <TouchableOpacity 
+                            onPress={() => navigation.navigate('Home')} 
+                            style={styles.BackBtnContainer}
+                            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                        >
+                            <AntDesign name="arrowleft" size={22} color="rgba(255,255,255,0.85)" />
+                        </TouchableOpacity>
+                        <Text style={styles.HeaderTitle}>Profile Settings</Text>
+                        <View style={{ width: EStyleSheet.value('40rem') }} />
+                    </View>
+
+                    <ScrollView 
+                        showsVerticalScrollIndicator={false} 
+                        style={{ marginTop: insets.top + (deviceType === 'Tablet' ? 65 : 78) }}
+                        contentContainerStyle={{ paddingBottom: 40 }}
+                    >
                         <Animatable.View animation="fadeInDown" delay={200} style={styles.ProfileCardWrap}>
-                            <View style={[styles.ProfileCard, {backgroundColor: colors.bgVar, borderColor: colors.lighter}]}>
+                            <View style={styles.ProfileCard}>
                                 <TouchableOpacity 
                                     style={styles.ProfileImgContainer}
                                     onPress={() => bs.current.snapTo(0)}
+                                    activeOpacity={0.9}
                                 >
-                                    <Image 
-                                        source={require('../assets/profile-user.png')} 
-                                        resizeMode='cover' 
-                                        style={styles.ProfileImg}
-                                    />
-                                    <View style={[styles.ImageEdit, {backgroundColor: colors.primary}]}>
-                                        <Feather name='camera' style={[styles.ImageEditIcon, {color: Colors.dark}]} />
+                                    <View style={styles.ProfileImgBorder}>
+                                        <Image 
+                                            source={{ uri: userData?.data?.user?.image || 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?q=80&w=300&auto=format&fit=crop' }} 
+                                            resizeMode='cover' 
+                                            style={styles.ProfileImg}
+                                        />
+                                    </View>
+                                    <View style={[styles.ImageEditBadge, {backgroundColor: '#7FFFD4'}]}>
+                                        <Feather name='camera' size={14} color='#111214' />
                                     </View>
                                 </TouchableOpacity>
                                 <View style={styles.ProfileInfo}>
-                                    <Text style={[styles.ProfileNameText, {color: colors.text}]} numberOfLines={1}>{userData.data.user.name}</Text>
-                                    <Text style={[styles.ProfilePhoneText, {color: colors.light}]}>{userData.data.user.phone}</Text>
+                                    <Text style={styles.ProfileNameText} numberOfLines={1}>{userData?.data?.user?.name || 'Alex Johnson'}</Text>
+                                    <Text style={styles.ProfilePhoneText}>{userData?.data?.user?.phone || '+1 (555) 000-0000'}</Text>
                                 </View>
                             </View>
                         </Animatable.View>
 
                         <Animatable.View animation="fadeInUp" delay={400} style={styles.SettingsWrap}>
-                            <View style={[styles.SettingsSection, {backgroundColor: colors.bgVar, borderColor: colors.lighter}]}>
-                                <View style={[styles.DarkMode, {borderBottomWidth: 1, borderBottomColor: colors.lighter}]}>
-                                    <View style={styles.SettingsItemIconWrap}>
-                                        <View style={[styles.SettingsIconSmall, {backgroundColor: 'rgba(255, 255, 255, 0.05)'}]}>
-                                            <Feather name='moon' size={18} color={colors.primary} />
+                            <View style={styles.SettingsSection}>
+                                <Text style={styles.SectionLabel}>Preferences</Text>
+                                <View style={styles.SettingsCard}>
+                                    <View style={styles.SettingsItemLeft}>
+                                        <View style={styles.IconBox}>
+                                            <Feather name="moon" size={20} color="#7FFFD4" />
                                         </View>
-                                        <Text style={[styles.SettingsItemText, {color: colors.text}]}>Dark Mode</Text>
+                                        <Text style={styles.SettingsItemText}>Dark Mode</Text>
                                     </View>
-                                    <Switch
-                                        trackColor={{ false: "#333", true: colors.primary }}
-                                        thumbColor={isEnabled ? Colors.dark : "#f4f3f4"}
-                                        ios_backgroundColor="#1A1B1F"
-                                        onValueChange={() => toggleSwitch()}
-                                        value={isEnabled}
-                                    />
+                                    <View style={{ marginRight: -10 }}>
+                                        <Switch
+                                            trackColor={{ false: "#2A2B2E", true: "#7FFFD4" }}
+                                            thumbColor="#FFFFFF"
+                                            ios_backgroundColor="#2A2B2E"
+                                            value={true}
+                                        />
+                                    </View>
                                 </View>
 
                                 <TouchableOpacity 
-                                    style={[styles.SettingsItem, {borderBottomWidth: 1, borderBottomColor: colors.lighter}]}
-                                    onPress={()=> bsPop.current.snapTo(0)}
+                                    style={styles.SettingsCard}
+                                    onPress={() => bsPop.current.snapTo(0)}
                                 >
-                                    <View style={styles.SettingsItemIconWrap}>
-                                        <View style={[styles.SettingsIconSmall, {backgroundColor: 'rgba(255, 255, 255, 0.05)'}]}>
-                                            <Feather name='bell' size={18} color={colors.primary} />
+                                    <View style={styles.SettingsItemLeft}>
+                                        <View style={styles.IconBox}>
+                                            <Feather name="target" size={20} color="#7FFFD4" />
                                         </View>
-                                        <Text style={[styles.SettingsItemText, {color: colors.text}]}>Notification Radius</Text>
+                                        <Text style={styles.SettingsItemText}>Alert Radius</Text>
                                     </View>
                                     <View style={styles.RightAction}>
-                                        <Text style={[styles.NotifyText, {color: colors.primary}]}>{notifyMe}km</Text>
-                                        <Feather name='chevron-right' size={18} color={colors.light} />
+                                        <Text style={styles.RadiusValText}>{distance.find(d => d.selected)?.dist} KM</Text>
+                                        <Feather name="chevron-right" size={20} color="rgba(255,255,255,0.2)" />
                                     </View>
-                                </TouchableOpacity>  
-
-                                <TouchableOpacity 
-                                    style={[styles.SettingsItem, {borderBottomWidth: 1, borderBottomColor: colors.lighter}]}
-                                    onPress={()=> navigation.navigate('EditProfile', {
-                                        userData: userData,
-                                        token: 'dummy-token'
-                                    })}
-                                >
-                                    <View style={styles.SettingsItemIconWrap}>
-                                        <View style={[styles.SettingsIconSmall, {backgroundColor: 'rgba(255, 255, 255, 0.05)'}]}>
-                                            <Feather name='edit-3' size={18} color={colors.primary} />
-                                        </View>
-                                        <Text style={[styles.SettingsItemText, {color: colors.text}]}>Edit Profile</Text>
-                                    </View>
-                                    <Feather name='chevron-right' size={18} color={colors.light} />
-                                </TouchableOpacity>  
-
-                                <TouchableOpacity 
-                                    style={[styles.SettingsItem, {borderBottomWidth: 1, borderBottomColor: colors.lighter}]}
-                                    onPress={()=> navigation.navigate('ChangePassword')}
-                                >
-                                    <View style={styles.SettingsItemIconWrap}>
-                                        <View style={[styles.SettingsIconSmall, {backgroundColor: 'rgba(255, 255, 255, 0.05)'}]}>
-                                            <Feather name='lock' size={18} color={colors.primary} />
-                                        </View>
-                                        <Text style={[styles.SettingsItemText, {color: colors.text}]}>Change Password</Text>
-                                    </View>
-                                    <Feather name='chevron-right' size={18} color={colors.light} />
-                                </TouchableOpacity>  
-
-                                <TouchableOpacity 
-                                    style={styles.SettingsItem}
-                                    onPress={()=> logout()}
-                                >
-                                    <View style={styles.SettingsItemIconWrap}>
-                                        <View style={[styles.SettingsIconSmall, {backgroundColor: 'rgba(255, 78, 78, 0.1)'}]}>
-                                            <Feather name='log-out' size={18} color="#FF4E4E" />
-                                        </View>
-                                        <Text style={[styles.SettingsItemText, {color: "#FF4E4E"}]}>Logout Account</Text>
-                                    </View>
-                                </TouchableOpacity>  
+                                </TouchableOpacity>
                             </View>
-                        </Animatable.View>
 
-                        <View style={styles.FooterWrap}>
-                            <Text style={[styles.FooterText, {color: colors.light}]}>Mylo v2026.1.0 • Connected Hearts</Text>
-                        </View>
+                            <View style={styles.SettingsSection}>
+                                <Text style={styles.SectionLabel}>Account</Text>
+                                <TouchableOpacity 
+                                    style={styles.SettingsCard}
+                                    onPress={() => navigation.navigate('EditProfile')}
+                                >
+                                    <View style={styles.SettingsItemLeft}>
+                                        <View style={styles.IconBox}>
+                                            <Feather name="user" size={20} color="#FFFFFF" />
+                                        </View>
+                                        <Text style={styles.SettingsItemText}>Edit Profile</Text>
+                                    </View>
+                                    <Feather name="chevron-right" size={20} color="rgba(255,255,255,0.2)" />
+                                </TouchableOpacity>
+
+                                <TouchableOpacity 
+                                    style={styles.SettingsCard}
+                                    onPress={() => navigation.navigate('ChangePassword')}
+                                >
+                                    <View style={styles.SettingsItemLeft}>
+                                        <View style={styles.IconBox}>
+                                            <Feather name="lock" size={20} color="#FFFFFF" />
+                                        </View>
+                                        <Text style={styles.SettingsItemText}>Security</Text>
+                                    </View>
+                                    <Feather name="chevron-right" size={20} color="rgba(255,255,255,0.2)" />
+                                </TouchableOpacity>
+                            </View>
+
+                            <View style={styles.SettingsSection}>
+                                <Text style={styles.SectionLabel}>Session</Text>
+                                <TouchableOpacity style={styles.LogoutCard}>
+                                    <View style={styles.SettingsItemLeft}>
+                                        <View style={[styles.IconBox, { backgroundColor: 'rgba(255,78,78,0.1)' }]}>
+                                            <Feather name="log-out" size={20} color="#FF4E4E" />
+                                        </View>
+                                        <Text style={[styles.SettingsItemText, { color: '#FF4E4E' }]}>Logout</Text>
+                                    </View>
+                                </TouchableOpacity>
+                            </View>
+
+                            <Text style={styles.FooterText}>App Version 2.0.4 (2026 Edition)</Text>
+                        </Animatable.View>
                     </ScrollView>
                 </Animatable.View>
-            }
+            )}
         </View>
-    )
-}
-
-const screenHeight = Dimensions.get('window').height;
+    );
+};
 
 const styles = EStyleSheet.create({
-    Container: {
-        flex: 1
+    Screen: { flex: 1, backgroundColor: '#09090B' },
+    GradientBg: { ...StyleSheet.absoluteFillObject },
+    GlowBlob: {
+        position: 'absolute', top: -150, left: '50%',
+        marginLeft: -250, width: 500, height: 500,
+        alignItems: 'center', justifyContent: 'center',
     },
-    TopBarStyle: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingHorizontal: '25rem',
-        height: '80rem',
-        paddingTop: '20rem',
-        justifyContent: 'center',
+    Center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+    Header: {
+        flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+        paddingHorizontal: '20rem', paddingBottom: '15rem',
+        position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10,
     },
-    TopBarBtnText: {
-        fontSize: '20rem',
-        fontFamily: 'GTWalsheimProBold',
+    HeaderTitle: {
+        fontSize: '18rem', fontFamily: 'GTWalsheimProBold',
+        letterSpacing: '0.3rem', color: '#FFFFFF',
     },
     BackBtnContainer: {
-        position: 'absolute',
-        left: '20rem',
-        top: '38rem',
+        width: '40rem', height: '40rem', borderRadius: '20rem',
+        backgroundColor: 'rgba(255, 255, 255, 0.08)',
+        alignItems: 'center', justifyContent: 'center',
+        borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)',
     },
-    BackBtn: {
-        fontSize: '28rem',
-    },
-    ProfileCardWrap: {
-        paddingHorizontal: '25rem',
-        marginTop: '20rem',
-        marginBottom: '30rem',
-    },
+    ProfileCardWrap: { paddingHorizontal: '24rem', marginTop: '0rem' },
     ProfileCard: {
-        width: '100%',
-        paddingVertical: '30rem',
-        paddingHorizontal: '20rem',
-        borderRadius: '24rem',
-        borderWidth: '1rem',
-        alignItems: 'center',
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 10 },
-        shadowOpacity: 0.1,
-        shadowRadius: 20,
-        elevation: 10,
-    },
-    ProfileImgContainer: {
-        position: 'relative',
-        marginBottom: '15rem',
-    },
-    ProfileImg: {
-        height: '110rem',
-        width: '110rem',
-        borderRadius: '55rem',
-        borderWidth: '3rem',
-        borderColor: 'rgba(255, 255, 255, 0.1)',
-    },
-    ImageEdit: {
-        position: 'absolute',
-        bottom: '5rem',
-        right: '5rem',
-        height: '32rem',
-        width: '32rem',
-        borderRadius: '16rem',
-        alignItems: 'center',
-        justifyContent: 'center',
-        elevation: 5,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.2,
-        shadowRadius: 4,
-    },
-    ImageEditIcon: {
-        fontSize: '16rem',
-    },
-    ProfileInfo: {
+        width: '100%', paddingVertical: '32rem', borderRadius: '32rem',
+        backgroundColor: 'rgba(255, 255, 255, 0.04)',
+        borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
         alignItems: 'center',
     },
-    ProfileNameText: {
-        fontSize: '24rem',
-        fontFamily: 'GTWalsheimProBold',
-        marginBottom: '5rem',
+    ProfileImgBorder: {
+        padding: '4rem', borderRadius: '50rem',
+        borderWidth: 1.5, borderColor: '#7FFFD4',
     },
-    ProfilePhoneText: {
-        fontSize: '15rem',
-        fontFamily: 'GTWalsheimProRegular',
-        letterSpacing: '0.5rem',
+    ProfileImg: { width: '88rem', height: '88rem', borderRadius: '44rem' },
+    ProfileImgContainer: { position: 'relative', marginBottom: '16rem' },
+    ImageEditBadge: {
+        position: 'absolute', bottom: '2rem', right: '2rem',
+        width: '28rem', height: '28rem', borderRadius: '14rem',
+        alignItems: 'center', justifyContent: 'center',
+        borderWidth: 3, borderColor: '#16171B',
     },
-    SettingsWrap: {
-        paddingHorizontal: '25rem',
+    ProfileInfo: { alignItems: 'center' },
+    ProfileNameText: { fontSize: '24rem', fontFamily: 'GTWalsheimProBold', color: '#FFFFFF', marginBottom: '4rem' },
+    ProfilePhoneText: { fontSize: '14rem', fontFamily: 'GTWalsheimProRegular', color: 'rgba(255,255,255,0.45)' },
+    SettingsWrap: { paddingHorizontal: '24rem', marginTop: '24rem' },
+    SettingsSection: { marginBottom: '24rem' },
+    SectionLabel: {
+        fontSize: '12rem', fontFamily: 'GTWalsheimProBold',
+        color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase',
+        letterSpacing: '1rem', marginBottom: '12rem', marginLeft: '8rem',
     },
-    SettingsSection: {
-        borderRadius: '24rem',
-        borderWidth: '1rem',
-        overflow: 'hidden',
+    SettingsCard: {
+        flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+        paddingHorizontal: '16rem', paddingVertical: '14rem', borderRadius: '20rem',
+        backgroundColor: 'rgba(255, 255, 255, 0.04)',
+        borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.07)',
+        marginBottom: '10rem',
     },
-    SettingsItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingHorizontal: '20rem',
-        paddingVertical: '18rem',
+    LogoutCard: {
+        flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+        paddingHorizontal: '16rem', paddingVertical: '14rem', borderRadius: '20rem',
+        backgroundColor: 'rgba(255, 78, 78, 0.05)',
+        borderWidth: 1, borderColor: 'rgba(255, 78, 78, 0.1)',
     },
-    DarkMode: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingHorizontal: '20rem',
-        paddingVertical: '16rem',
+    SettingsItemLeft: { flexDirection: 'row', alignItems: 'center' },
+    IconBox: {
+        width: '38rem', height: '38rem', borderRadius: '12rem',
+        backgroundColor: 'rgba(255, 255, 255, 0.06)',
+        alignItems: 'center', justifyContent: 'center', marginRight: '14rem',
     },
-    SettingsItemIconWrap: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    SettingsIconSmall: {
-        height: '42rem',
-        width: '42rem',
-        borderRadius: '14rem',
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginRight: '15rem',
-    },
-    SettingsItemText: {
-        fontSize: '16rem',
-        fontFamily: 'GTWalsheimProMedium',
-    },
-    RightAction: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    NotifyText: {
-        fontSize: '14rem',
-        fontFamily: 'GTWalsheimProBold',
-        marginRight: '8rem',
-    },
-    FooterWrap: {
-        marginTop: '40rem',
-        marginBottom: '30rem',
-        alignItems: 'center',
-    },
+    SettingsItemText: { fontSize: '16rem', fontFamily: 'GTWalsheimProMedium', color: '#FFFFFF' },
+    RightAction: { flexDirection: 'row', alignItems: 'center' },
+    RadiusValText: { fontSize: '15rem', fontFamily: 'GTWalsheimProBold', color: '#7FFFD4', marginRight: '8rem' },
     FooterText: {
-        fontSize: '13rem',
-        fontFamily: 'GTWalsheimProRegular',
-        opacity: 0.5,
+        fontSize: '12rem', color: 'rgba(255,255,255,0.25)',
+        textAlign: 'center', marginTop: '20rem', fontFamily: 'GTWalsheimProRegular',
     },
-    BottomSheet: {
-        padding: '25rem',
-        height: '100%',
-        borderTopLeftRadius: '30rem',
-        borderTopRightRadius: '30rem',
+    // BottomSheet Styles
+    BottomSheetContainer: {
+        paddingHorizontal: '16rem', paddingBottom: '20rem',
     },
-    bsHeader: {
-        height: '30rem',
-        alignItems: 'center',
-        justifyContent: 'center',
+    BsContentCard: {
+        backgroundColor: '#16171B', borderRadius: '32rem',
+        padding: '24rem',
+        borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)',
     },
-    bsHandle: {
-        height: '6rem',
-        width: '50rem',
-        borderRadius: '3rem',
+    BsIndicator: {
+        width: '40rem', height: '5rem', borderRadius: '3rem',
+        backgroundColor: 'rgba(255,255,255,0.15)', alignSelf: 'center', marginBottom: '20rem',
     },
-    SubmitContainer: {
-        height: '55rem',
-        borderRadius: '16rem',
-        backgroundColor: Colors.primary,
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginTop: '15rem',
-        width: '100%'
+    BsTitle: { fontSize: '22rem', fontFamily: 'GTWalsheimProBold', color: '#FFFFFF', textAlign: 'center', marginBottom: '8rem' },
+    BsSubtitle: { fontSize: '15rem', fontFamily: 'GTWalsheimProRegular', color: 'rgba(255,255,255,0.4)', textAlign: 'center', marginBottom: '28rem' },
+    BsOptionsRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: '10rem' },
+    BsMainOption: { flex: 1, alignItems: 'center' },
+    BsIconWrap: {
+        width: '60rem', height: '60rem', borderRadius: '20rem',
+        alignItems: 'center', justifyContent: 'center', marginBottom: '10rem',
     },
-    SubmitText: {
-        fontSize: '16rem',
-        color: Colors.dark,
-        fontFamily: 'GTWalsheimProBold',
+    AvatarOptionsGrid: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: '32rem', marginTop: '10rem' },
+    AvatarOptionItem: { alignItems: 'center', width: '30%' },
+    AvatarIconCircle: {
+        width: '60rem', height: '60rem', borderRadius: '30rem',
+        alignItems: 'center', justifyContent: 'center',
+        marginBottom: '10rem', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
     },
-    ConfirmPop: {
-        padding: '25rem',
+    AvatarOptionLabel: { fontSize: '12rem', fontFamily: 'GTWalsheimProBold', color: '#FFFFFF', opacity: 0.8 },
+    BsCancelFullBtn: {
+        height: '52rem', borderRadius: '26rem',
+        backgroundColor: 'rgba(255, 255, 255, 0.05)', alignItems: 'center', justifyContent: 'center',
     },
-    ConfirmPopText: {
-        fontFamily: 'GTWalsheimProBold',
-        fontSize: '20rem',
-        marginBottom: '20rem',
+    BsCancelFullBtnText: { fontSize: '15rem', fontFamily: 'GTWalsheimProBold', color: 'rgba(255, 255, 255, 0.5)' },
+    RadiusGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', marginBottom: '32rem' },
+    RadiusBox: {
+        width: '48%', height: '80rem', borderRadius: '20rem',
+        backgroundColor: 'rgba(255,255,255,0.04)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
+        alignItems: 'center', justifyContent: 'center', marginBottom: '12rem',
     },
-    ListWrap: {
-        borderWidth: '1rem',
-        borderRadius: '15rem',
-        overflow: 'hidden',
-    },
-    DistanceBtn: {
-        height: '50rem',
-        width: '70rem',
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderRightWidth: '1rem',
-    },
-    DistanceBtnText: {
-        fontSize: '16rem',
-        fontFamily: 'GTWalsheimProBold'
-    }
-})
+    RadiusBoxActive: { backgroundColor: '#7FFFD4', borderColor: '#7FFFD4' },
+    RadiusBoxText: { fontSize: '24rem', fontFamily: 'GTWalsheimProBold', color: '#FFFFFF' },
+    RadiusBoxTextActive: { color: '#09090B' },
+    RadiusUnit: { fontSize: '12rem', fontFamily: 'GTWalsheimProBold', color: 'rgba(255,255,255,0.3)', marginTop: '2rem' },
+    RadiusUnitActive: { color: 'rgba(0,0,0,0.5)' },
+});
 
 export default ProfileScreen;
-

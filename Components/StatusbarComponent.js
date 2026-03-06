@@ -1,22 +1,14 @@
 import React from 'react';
-import { StatusBar } from 'react-native';
-import { useTheme } from '@react-navigation/native';
+import { StatusBar, Platform } from 'react-native';
 
-const StatusbarComponent = ({ barStyle }) => {
-
-    const theme = useTheme();
-    const { colors } = useTheme();
-
+const StatusbarComponent = ({ barStyle, bgColor = 'transparent' }) => {
     return (
-        <>
-            {
-                barStyle === 'dark' ?
-                <StatusBar barStyle='dark-content' />
-                :
-                <StatusBar barStyle='light-content' />
-            }
-        </>
-    )
-}
+        <StatusBar 
+            barStyle={barStyle === 'dark' ? 'dark-content' : 'light-content'}
+            backgroundColor={bgColor}
+            translucent={true}
+        />
+    );
+};
 
 export default StatusbarComponent;

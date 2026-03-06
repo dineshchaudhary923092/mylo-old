@@ -1,5 +1,6 @@
 import React, { useState, useContext, useRef, useEffect } from 'react';
 import { Text, View, TextInput, TouchableOpacity, ActivityIndicator, Dimensions } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import StatusBarComponent from '../Components/StatusbarComponent'
 import {Colors} from '../Constants/Colors';
 import SimpleLineIcons from 'react-native-vector-icons/SimpleLineIcons';
@@ -21,6 +22,7 @@ import * as Animatable from 'react-native-animatable';
 let deviceType = getDeviceType();
 
 const SignUpScreen = ({ navigation }) => {
+    const insets = useSafeAreaInsets();
 
     const theme = useTheme();
     const { colors } = useTheme();
@@ -116,7 +118,7 @@ const SignUpScreen = ({ navigation }) => {
                 enableOnAndroid={true}
                 contentContainerStyle={{flexGrow: 1}}
             >
-                <Animatable.View animation="fadeIn" duration={1000} style={styles.InnerContainer}>
+                <Animatable.View animation="fadeIn" duration={1000} style={[styles.InnerContainer, {paddingTop: insets.top + 40}]}>
                     {
                         showOTP ? 
                         <Animatable.View animation="zoomIn" duration={500} style={styles.otparea}>

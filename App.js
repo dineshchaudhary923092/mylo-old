@@ -19,18 +19,22 @@ import { getDeviceType } from 'react-native-device-info';
 import OneSignal from 'react-native-onesignal';
 import NetInfo from "@react-native-community/netinfo";
 import io from "socket.io-client";
+import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context';
 
 let deviceType = getDeviceType();
 
-const {width} = Dimensions.get('window');
-const rem = width / 380;
-const remSm = width / 400;
-const remTab = width / 420; 
+const {width, height} = Dimensions.get('window');
+
+// Ensure we have non-zero dimensions
+const safeWidth = width || 375;
+const rem = safeWidth / 380;
+const remSm = safeWidth / 400;
+const remTab = safeWidth / 420; 
 
 EStyleSheet.build({
 	$rem: deviceType === 'Tablet' ? 
 		remTab : 
-		width > 400 ? rem : remSm,
+		safeWidth > 400 ? rem : remSm,
 });
 
 const App = () => {
@@ -117,15 +121,15 @@ const App = () => {
 		...DarkTheme,
 		colors: {
 			...DarkTheme.colors,
-			background: '#16171B',
-			black: '#16171B',
+			background: '#09090B',
+			black: '#09090B',
 			primary: '#7FFFD4',
-			light: 'rgba(255, 255, 255, 0.5)',
-			lighter: 'rgba(255, 255, 255, 0.1)',
-			text: '#fff',
-			bgVar: '#0D0E10',
+			light: 'rgba(255, 255, 255, 0.4)',
+			lighter: 'rgba(255, 255, 255, 0.07)',
+			text: '#F2F2F2',
+			bgVar: '#111214',
 			pText: '#7FFFD4',
-			sheet: '#232323'
+			sheet: '#131416'
 		},
 	}
 
@@ -285,9 +289,11 @@ const App = () => {
 				isNetworkReachable ?
 				<SocketContext.Provider value={socket}>
 					<AuthContext.Provider value={authContext}>
-						<NavigationContainer theme={theme}>
-							<AppNavigation userToken={loginState.userToken} />
-						</NavigationContainer>
+						<SafeAreaProvider initialMetrics={initialWindowMetrics}>
+							<NavigationContainer theme={theme}>
+								<AppNavigation userToken={loginState.userToken} />
+							</NavigationContainer>
+						</SafeAreaProvider>
 						<FlashMessage position="top" />
 					</AuthContext.Provider>
 				</SocketContext.Provider>

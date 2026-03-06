@@ -69,25 +69,18 @@ const AppNavigation = ({userToken}) => {
 	const { colors } = useTheme();
 
 	return (
-		<>
+		<View style={{flex: 1, backgroundColor: colors.background}}>
+			<StatusBar 
+				translucent 
+				backgroundColor="transparent" 
+				barStyle={theme.dark ? 'light-content' : 'dark-content'} 
+			/>
 			{
 				userToken != null ?
-				<SafeAreaView style={{flex: 1, backgroundColor: colors.background}}>
-					{
-						Platform.OS === 'android' ?
-						<StatusBar backgroundColor={colors.primary} barStyle='dark-content' /> : null
-					}
-					<MainScreen/> 
-				</SafeAreaView> :
-				<SafeAreaView style={{flex: 1, backgroundColor: colors.background}}>
-					{
-						Platform.OS === 'android' ?
-						<StatusBar backgroundColor={colors.primary} barStyle='dark-content' /> : null
-					}
-					<AuthScreen/>
-				</SafeAreaView>
+				<MainScreen/> :
+				<AuthScreen/>
 			}
-		</>
+		</View>
 	);
 }
 

@@ -28,11 +28,14 @@ const ProfileScreen = ({ navigation }) => {
     const bsPop = useRef(null);
     const [fall, setFall] = useState(new Animated.Value(1));
     const [isLoading, setIsLoading] = useState(false);
+    const [activeFilter, setActiveFilter] = useState('All');
+    const [isBsOpen, setIsBsOpen] = useState(false);
+    const [isDarkMode, setIsDarkMode] = useState(true);
     const [distance, setDistance] = useState([
-        { id: 1, dist: 5, selected: true },
-        { id: 2, dist: 10, selected: false },
-        { id: 3, dist: 25, selected: false },
-        { id: 4, dist: 50, selected: false }
+        { dist: 5, selected: true },
+        { dist: 10, selected: false },
+        { dist: 25, selected: false },
+        { dist: 50, selected: false },
     ]);
 
     const [getData, responseData, setResponseData, responseType, response, setResponse, _getUserData, userData, setUserData, isData] = useAxios();
@@ -45,8 +48,13 @@ const ProfileScreen = ({ navigation }) => {
         }
     }, [isFocused]);
 
-    const changeDistance = (item) => {
-        setDistance(prev => prev.map(d => ({ ...d, selected: d.id === item.id })));
+    const changeDistance = (selectedItem) => {
+        let items = distance.map(item => ({
+            ...item,
+            selected: item.dist === selectedItem.dist
+        }));
+        setDistance(items);
+        setTimeout(() => bsPop.current.snapTo(1), 300);
     };
 
     const renderAvatarSheet = () => (
@@ -90,44 +98,34 @@ const ProfileScreen = ({ navigation }) => {
     );
 
     const renderRadiusSheet = () => (
-        <View style={styles.BottomSheetContainer}>
-            <View style={styles.BsContentCard}>
-                <View style={styles.BsIndicator} />
-                <Text style={styles.BsTitle}>Alert Radius</Text>
-                <Text style={styles.BsSubtitle}>Select the distance (km) for proximity alerts</Text>
-                
-                <View style={styles.RadiusGrid}>
-                    {distance.map((item, index) => (
-                        <TouchableOpacity 
-                            key={index}
-                            activeOpacity={0.8}
-                            style={[
-                                styles.RadiusBox, 
-                                item.selected && styles.RadiusBoxActive
-                            ]}
-                            onPress={() => changeDistance(item)}
-                        >
-                            <Text style={[
-                                styles.RadiusBoxText, 
-                                item.selected && styles.RadiusBoxTextActive
-                            ]}>
-                                {item.dist}
-                            </Text>
-                            <Text style={[
-                                styles.RadiusUnit, 
-                                item.selected && styles.RadiusUnitActive
-                            ]}>KM</Text>
-                        </TouchableOpacity>
-                    ))}
-                </View>
-
-                <TouchableOpacity 
-                    style={styles.BsSubmitBtn}
-                    onPress={() => bsPop.current.snapTo(1)}
-                    activeOpacity={0.8}
-                >
-                    <Text style={styles.BsSubmitBtnText}>Confirm Settings</Text>
-                </TouchableOpacity>
+        <View style={styles.BsContentCard}>
+            <View style={styles.BsIndicator} />
+            <Text style={styles.BsTitle}>Alert Radius</Text>
+            <Text style={styles.BsSubtitle}>Select the distance (km) for proximity alerts</Text>
+            
+            <View style={styles.RadiusGrid}>
+                {distance.map((item, index) => (
+                    <TouchableOpacity 
+                        key={index}
+                        activeOpacity={0.8}
+                        style={[
+                            styles.RadiusBox, 
+                            item.selected && styles.RadiusBoxActive
+                        ]}
+                        onPress={() => changeDistance(item)}
+                    >
+                        <Text style={[
+                            styles.RadiusBoxText, 
+                            item.selected && styles.RadiusBoxTextActive
+                        ]}>
+                            {item.dist}
+                        </Text>
+                        <Text style={[
+                            styles.RadiusUnit, 
+                            item.selected && styles.RadiusUnitActive
+                        ]}>KM</Text>
+                    </TouchableOpacity>
+                ))}
             </View>
         </View>
     );
@@ -154,6 +152,28 @@ const ProfileScreen = ({ navigation }) => {
                 </Svg>
             </View>
 
+            <Animated.View
+                style={{
+                    ...StyleSheet.absoluteFillObject,
+                    backgroundColor: '#000',
+                    opacity: Animated.interpolate(fall, {
+                        inputRange: [0, 1],
+                        outputRange: [0.75, 0],
+                    }),
+                    zIndex: 15,
+                }}
+                pointerEvents={isBsOpen ? 'auto' : 'none'}
+            >
+                <TouchableOpacity 
+                    style={{ flex: 1 }} 
+                    activeOpacity={1} 
+                    onPress={() => {
+                        bs.current.snapTo(1);
+                        bsPop.current.snapTo(1);
+                    }} 
+                />
+            </Animated.View>
+
             <BottomSheet
                 ref={bs}
                 snapPoints={[EStyleSheet.value('320rem'), 0]}
@@ -161,14 +181,18 @@ const ProfileScreen = ({ navigation }) => {
                 enabledGestureInteraction={true}
                 initialSnap={1}
                 callbackNode={fall}
+                onOpenEnd={() => setIsBsOpen(true)}
+                onCloseEnd={() => setIsBsOpen(false)}
             />
             <BottomSheet
                 ref={bsPop}
-                snapPoints={[EStyleSheet.value('360rem'), 0]}
+                snapPoints={[EStyleSheet.value('420rem'), 0]}
                 renderContent={renderRadiusSheet}
                 enabledGestureInteraction={true}
                 initialSnap={1}
                 callbackNode={fall}
+                onOpenEnd={() => setIsBsOpen(true)}
+                onCloseEnd={() => setIsBsOpen(false)}
             />
 
             <StatusBarComponent bgcolor="transparent" barStyle="light-content" />
@@ -232,12 +256,13 @@ const ProfileScreen = ({ navigation }) => {
                                         </View>
                                         <Text style={styles.SettingsItemText}>Dark Mode</Text>
                                     </View>
-                                    <View style={{ marginRight: -10 }}>
+                                    <View style={{ marginRight: EStyleSheet.value('8rem') }}>
                                         <Switch
-                                            trackColor={{ false: "#2A2B2E", true: "#7FFFD4" }}
+                                            trackColor={{ false: "#111214", true: "#7FFFD4" }}
                                             thumbColor="#FFFFFF"
-                                            ios_backgroundColor="#2A2B2E"
-                                            value={true}
+                                            ios_backgroundColor="#111214"
+                                            value={isDarkMode}
+                                            onValueChange={val => setIsDarkMode(val)}
                                         />
                                     </View>
                                 </View>
@@ -333,19 +358,19 @@ const styles = EStyleSheet.create({
         alignItems: 'center', justifyContent: 'center',
         borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)',
     },
-    ProfileCardWrap: { paddingHorizontal: '24rem', marginTop: '0rem' },
+    ProfileCardWrap: { paddingHorizontal: '24rem', marginTop: '12rem' },
     ProfileCard: {
-        width: '100%', paddingVertical: '32rem', borderRadius: '32rem',
+        width: '100%', paddingVertical: '16rem', borderRadius: '24rem',
         backgroundColor: 'rgba(255, 255, 255, 0.04)',
         borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
         alignItems: 'center',
     },
     ProfileImgBorder: {
-        padding: '4rem', borderRadius: '50rem',
+        padding: '3rem', borderRadius: '44rem',
         borderWidth: 1.5, borderColor: '#7FFFD4',
     },
-    ProfileImg: { width: '88rem', height: '88rem', borderRadius: '44rem' },
-    ProfileImgContainer: { position: 'relative', marginBottom: '16rem' },
+    ProfileImg: { width: '74rem', height: '74rem', borderRadius: '37rem' },
+    ProfileImgContainer: { position: 'relative', marginBottom: '12rem' },
     ImageEditBadge: {
         position: 'absolute', bottom: '2rem', right: '2rem',
         width: '28rem', height: '28rem', borderRadius: '14rem',
@@ -353,37 +378,37 @@ const styles = EStyleSheet.create({
         borderWidth: 3, borderColor: '#16171B',
     },
     ProfileInfo: { alignItems: 'center' },
-    ProfileNameText: { fontSize: '24rem', fontFamily: 'GTWalsheimProBold', color: '#FFFFFF', marginBottom: '4rem' },
-    ProfilePhoneText: { fontSize: '14rem', fontFamily: 'GTWalsheimProRegular', color: 'rgba(255,255,255,0.45)' },
-    SettingsWrap: { paddingHorizontal: '24rem', marginTop: '24rem' },
-    SettingsSection: { marginBottom: '24rem' },
+    ProfileNameText: { fontSize: '18rem', fontFamily: 'GTWalsheimProBold', color: '#FFFFFF', marginBottom: '2rem' },
+    ProfilePhoneText: { fontSize: '12rem', fontFamily: 'GTWalsheimProRegular', color: 'rgba(255,255,255,0.45)' },
+    SettingsWrap: { paddingHorizontal: '24rem', marginTop: '12rem' },
+    SettingsSection: { marginBottom: '12rem' },
     SectionLabel: {
-        fontSize: '12rem', fontFamily: 'GTWalsheimProBold',
+        fontSize: '10rem', fontFamily: 'GTWalsheimProBold',
         color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase',
-        letterSpacing: '1rem', marginBottom: '12rem', marginLeft: '8rem',
+        letterSpacing: '1rem', marginBottom: '8rem', marginLeft: '8rem',
     },
     SettingsCard: {
         flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-        paddingHorizontal: '16rem', paddingVertical: '14rem', borderRadius: '20rem',
+        paddingHorizontal: '14rem', paddingVertical: '10rem', borderRadius: '16rem',
         backgroundColor: 'rgba(255, 255, 255, 0.04)',
         borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.07)',
-        marginBottom: '10rem',
+        marginBottom: '8rem',
     },
     LogoutCard: {
         flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-        paddingHorizontal: '16rem', paddingVertical: '14rem', borderRadius: '20rem',
+        paddingHorizontal: '14rem', paddingVertical: '10rem', borderRadius: '16rem',
         backgroundColor: 'rgba(255, 78, 78, 0.05)',
         borderWidth: 1, borderColor: 'rgba(255, 78, 78, 0.1)',
     },
     SettingsItemLeft: { flexDirection: 'row', alignItems: 'center' },
     IconBox: {
-        width: '38rem', height: '38rem', borderRadius: '12rem',
+        width: '30rem', height: '30rem', borderRadius: '9rem',
         backgroundColor: 'rgba(255, 255, 255, 0.06)',
-        alignItems: 'center', justifyContent: 'center', marginRight: '14rem',
+        alignItems: 'center', justifyContent: 'center', marginRight: '10rem',
     },
-    SettingsItemText: { fontSize: '16rem', fontFamily: 'GTWalsheimProMedium', color: '#FFFFFF' },
+    SettingsItemText: { fontSize: '14rem', fontFamily: 'GTWalsheimProMedium', color: '#FFFFFF' },
     RightAction: { flexDirection: 'row', alignItems: 'center' },
-    RadiusValText: { fontSize: '15rem', fontFamily: 'GTWalsheimProBold', color: '#7FFFD4', marginRight: '8rem' },
+    RadiusValText: { fontSize: '14rem', fontFamily: 'GTWalsheimProBold', color: '#7FFFD4', marginRight: '8rem' },
     FooterText: {
         fontSize: '12rem', color: 'rgba(255,255,255,0.25)',
         textAlign: 'center', marginTop: '20rem', fontFamily: 'GTWalsheimProRegular',
@@ -393,16 +418,16 @@ const styles = EStyleSheet.create({
         paddingHorizontal: '16rem', paddingBottom: '20rem',
     },
     BsContentCard: {
-        backgroundColor: '#16171B', borderRadius: '32rem',
-        padding: '24rem',
-        borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)',
+        backgroundColor: '#111214', borderTopLeftRadius: '32rem', borderTopRightRadius: '32rem',
+        padding: '24rem', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
+        height: '420rem',
     },
     BsIndicator: {
         width: '40rem', height: '5rem', borderRadius: '3rem',
-        backgroundColor: 'rgba(255,255,255,0.15)', alignSelf: 'center', marginBottom: '20rem',
+        backgroundColor: 'rgba(255,255,255,0.1)', alignSelf: 'center', marginBottom: '20rem',
     },
     BsTitle: { fontSize: '22rem', fontFamily: 'GTWalsheimProBold', color: '#FFFFFF', textAlign: 'center', marginBottom: '8rem' },
-    BsSubtitle: { fontSize: '15rem', fontFamily: 'GTWalsheimProRegular', color: 'rgba(255,255,255,0.4)', textAlign: 'center', marginBottom: '28rem' },
+    BsSubtitle: { fontSize: '15rem', fontFamily: 'GTWalsheimProRegular', color: 'rgba(255,255,255,0.4)', textAlign: 'center', marginBottom: '32rem' },
     BsOptionsRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: '10rem' },
     BsMainOption: { flex: 1, alignItems: 'center' },
     BsIconWrap: {
@@ -425,7 +450,7 @@ const styles = EStyleSheet.create({
     RadiusGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', marginBottom: '32rem' },
     RadiusBox: {
         width: '48%', height: '80rem', borderRadius: '20rem',
-        backgroundColor: 'rgba(255,255,255,0.04)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
+        backgroundColor: 'rgba(255,255,255,0.06)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)',
         alignItems: 'center', justifyContent: 'center', marginBottom: '12rem',
     },
     RadiusBoxActive: { backgroundColor: '#7FFFD4', borderColor: '#7FFFD4' },

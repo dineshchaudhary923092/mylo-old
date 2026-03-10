@@ -1,6 +1,8 @@
 import 'react-native-gesture-handler';
 import React, {useState, useEffect, useMemo, useReducer} from 'react';
-import { StatusBar, Dimensions, Platform, NativeModules, SafeAreaView, View, Image, Text, Appearance, PermissionsAndroid } from 'react-native';
+import { LogBox, StatusBar, Dimensions, Platform, NativeModules, SafeAreaView, View, Image, Text, Appearance, PermissionsAndroid } from 'react-native';
+
+LogBox.ignoreLogs(['RCTBridge required dispatch_sync']);
 import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
 import AppNavigation from './Navigation/AppNavigation';
 import AsyncStorage from '@react-native-community/async-storage';

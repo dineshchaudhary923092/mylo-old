@@ -43,7 +43,7 @@ const GroupsScreen = ({ navigation, socket }) => {
                 displayId: 1,
                 displayIdEnc: 'dummy-enc-1',
                 displayName: 'Weekend Crew 🏖️',
-                displayImage: 'https://images.unsplash.com/photo-1539193593-70829d1e5d85?q=80&w=200&auto=format&fit=crop',
+                displayImage: 'https://images.unsplash.com/photo-1511632765486-a01980e01a18?q=80&w=200&auto=format&fit=crop',
                 isOwner: 'yes',
                 lastSeenDetailed: { customFormat: '30m' },
                 message: { text: 'Are we still on for Saturday?', fromUserName: 'You', isOwner: 'yes' },
@@ -123,7 +123,7 @@ const GroupsScreen = ({ navigation, socket }) => {
 
     const renderGroupItem = ({ item }) => (
         <SwipeRow 
-            rightOpenValue={item.isOwner === 'yes' ? EStyleSheet.value('-180rem') : EStyleSheet.value('-90rem')}
+            rightOpenValue={item.isOwner === 'yes' ? EStyleSheet.value('-174rem') : EStyleSheet.value('-94rem')}
             disableRightSwipe={true}
         >
             <View style={styles.RowBack}>
@@ -133,20 +133,24 @@ const GroupsScreen = ({ navigation, socket }) => {
                             style={styles.EditAction}
                             onPress={() => navigation.navigate('ManageGroup', { type: 'Edit', groupId: item.displayIdEnc })}
                         >
-                            <Feather name="edit-3" size={24} color="#FFFFFF" />
+                            <Feather name="edit-3" size={24} color="#111214" />
+                            <Text style={styles.EditActionText}>Edit</Text>
                         </TouchableOpacity>
                     )}
                     <TouchableOpacity 
                         style={styles.DeleteAction} 
                         onPress={() => { SetGroupToRemove(item); bsPop.current.snapTo(0); }}
                     >
-                        <Feather name={item.isOwner === 'yes' ? "trash-2" : "log-out"} size={24} color="#FFFFFF" />
+                        <Feather name={item.isOwner === 'yes' ? "trash-2" : "log-out"} size={22} color="#FFFFFF" />
+                        <Text style={styles.DeleteActionText}>
+                            {item.isOwner === 'yes' ? 'Delete' : 'Leave'}
+                        </Text>
                     </TouchableOpacity>
                 </View>
             </View>
             <TouchableHighlight 
                 onPress={() => navigation.navigate('Chat', { cData: item, chatType: 'cgrp' })}
-                underlayColor="rgba(255,255,255,0.05)"
+                underlayColor="#1C1D21"
                 style={styles.ListCard}
             >
                 <View style={styles.GroupRow}>
@@ -213,25 +217,34 @@ const styles = EStyleSheet.create({
     Center: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingTop: '100rem' },
     ListContent: { paddingHorizontal: '20rem', paddingBottom: '40rem' },
     ListCard: {
-        backgroundColor: 'rgba(255,255,255,0.035)', borderRadius: '24rem',
-        marginBottom: '12rem', padding: '16rem', borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)',
+        backgroundColor: '#121317', borderRadius: '24rem',
+        marginBottom: '16rem', padding: '18rem', borderWidth: 1.2, borderColor: 'rgba(255,255,255,0.06)',
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4.65,
+        elevation: 8,
     },
     GroupRow: { flexDirection: 'row', alignItems: 'center' },
     AvatarContainer: { position: 'relative' },
-    Avatar: { width: '56rem', height: '56rem', borderRadius: '20rem', backgroundColor: 'rgba(255,255,255,0.05)' },
-    AdminBadge: {
-        position: 'absolute', bottom: '-4rem', right: '-4rem',
-        backgroundColor: '#7FFFD4', paddingHorizontal: '6rem', paddingVertical: '2rem',
-        borderRadius: '8rem', borderWidth: 2, borderColor: '#09090B',
+    Avatar: { 
+        width: '52rem', height: '52rem', borderRadius: '18rem', 
+        backgroundColor: 'rgba(255,255,255,0.05)',
+        borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.1)'
     },
-    AdminText: { fontSize: '8rem', fontFamily: 'GTWalsheimProBold', color: '#111214', textTransform: 'uppercase' },
+    AdminBadge: {
+        position: 'absolute', bottom: '-2rem', right: '-2rem',
+        backgroundColor: '#7FFFD4', paddingHorizontal: '5rem', paddingVertical: '2rem',
+        borderRadius: '7rem', borderWidth: 2, borderColor: '#121317',
+    },
+    AdminText: { fontSize: '7rem', fontFamily: 'GTWalsheimProBold', color: '#111214', textTransform: 'uppercase' },
     GroupInfo: { flex: 1, marginLeft: '16rem' },
     GroupTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4rem' },
-    GroupName: { fontSize: '17rem', fontFamily: 'GTWalsheimProBold', color: '#FFFFFF', flex: 1, marginRight: '8rem' },
-    Timestamp: { fontSize: '11rem', fontFamily: 'GTWalsheimProRegular', color: 'rgba(255,255,255,0.3)' },
+    GroupName: { fontSize: '17.5rem', fontFamily: 'GTWalsheimProBold', color: '#FFFFFF', flex: 1, marginRight: '8rem' },
+    Timestamp: { fontSize: '11rem', fontFamily: 'GTWalsheimProRegular', color: 'rgba(255,255,255,0.25)' },
     GroupBottom: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-    LastMessage: { fontSize: '14rem', fontFamily: 'GTWalsheimProRegular', color: 'rgba(255,255,255,0.5)', flex: 1, marginRight: '10rem' },
-    SenderName: { fontFamily: 'GTWalsheimProMedium', color: 'rgba(255,255,255,0.7)' },
+    LastMessage: { fontSize: '14.5rem', fontFamily: 'GTWalsheimProRegular', color: 'rgba(255,255,255,0.4)', flex: 1, marginRight: '10rem' },
+    SenderName: { fontFamily: 'GTWalsheimProMedium', color: 'rgba(255,255,255,0.55)' },
     UnreadText: { color: '#FFFFFF', fontFamily: 'GTWalsheimProMedium' },
     UnreadBadge: {
         backgroundColor: '#7FFFD4', height: '22rem', minWidth: '22rem',
@@ -239,12 +252,25 @@ const styles = EStyleSheet.create({
     },
     UnreadCount: { fontSize: '11rem', fontFamily: 'GTWalsheimProBold', color: '#09090B' },
     RowBack: {
-        backgroundColor: '#FF4E4E', borderRadius: '24rem', height: '88rem',
-        justifyContent: 'center', alignItems: 'flex-end', marginBottom: '12rem', overflow: 'hidden',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'flex-end',
+        paddingRight: '10rem',
+        height: '100%', 
+        paddingBottom: '16rem', // Match ListCard marginBottom
     },
-    RowBackActions: { flexDirection: 'row', height: '100%' },
-    EditAction: { width: '90rem', height: '100%', alignItems: 'center', justifyContent: 'center', backgroundColor: '#7FFFD4' },
-    DeleteAction: { width: '90rem', height: '100%', alignItems: 'center', justifyContent: 'center' },
+    RowBackActions: { flexDirection: 'row', alignItems: 'center' },
+    EditAction: { 
+        width: '74rem', height: '74rem', borderRadius: '22rem', 
+        alignItems: 'center', justifyContent: 'center', backgroundColor: '#7FFFD4',
+        marginRight: '10rem'
+    },
+    EditActionText: { color: '#111214', fontSize: '11rem', fontFamily: 'GTWalsheimProBold', marginTop: '3rem' },
+    DeleteAction: { 
+        width: '74rem', height: '74rem', borderRadius: '22rem', 
+        alignItems: 'center', justifyContent: 'center', backgroundColor: '#E53E3E' 
+    },
+    DeleteActionText: { color: '#FFFFFF', fontSize: '11rem', fontFamily: 'GTWalsheimProBold', marginTop: '3rem' },
     // BottomSheet
     BottomSheetContainer: { paddingHorizontal: '16rem', paddingBottom: '20rem' },
     BsCard: {

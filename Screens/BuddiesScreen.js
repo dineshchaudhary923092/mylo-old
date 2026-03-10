@@ -51,7 +51,7 @@ const BuddiesScreen = ({ navigation, socket }) => {
                 id: 2,
                 displayId: 2,
                 displayName: 'James Carter',
-                displayImage: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=200&auto=format&fit=crop',
+                displayImage: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200&auto=format&fit=crop',
                 timePrint: { fromNow: '1h' },
                 message: { text: 'Sounds good, let\'s meet at the entrance!', fromUserName: 'James Carter', isOwner: 'yes', seenPrint: { fromNow: '1h' } },
                 messageCount: 0,
@@ -61,7 +61,7 @@ const BuddiesScreen = ({ navigation, socket }) => {
                 id: 3,
                 displayId: 3,
                 displayName: 'Priya Sharma',
-                displayImage: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop',
+                displayImage: 'https://images.unsplash.com/photo-1534751516642-a1af1ef26a56?q=80&w=200&auto=format&fit=crop',
                 timePrint: { fromNow: '3h' },
                 message: { text: 'Did you see the new community update?', fromUserName: 'Priya Sharma', isOwner: 'no', seenPrint: { fromNow: '3h' } },
                 messageCount: 1,
@@ -81,7 +81,7 @@ const BuddiesScreen = ({ navigation, socket }) => {
                 id: 5,
                 displayId: 5,
                 displayName: 'Marcus Miller',
-                displayImage: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=200&auto=format&fit=crop',
+                displayImage: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=200&auto=format&fit=crop',
                 timePrint: { fromNow: '2d' },
                 message: { text: 'Great catch earlier today!', fromUserName: 'Marcus Miller', isOwner: 'yes', seenPrint: { fromNow: '2d' } },
                 messageCount: 0,
@@ -130,7 +130,7 @@ const BuddiesScreen = ({ navigation, socket }) => {
             </View>
             <TouchableHighlight 
                 onPress={() => navigation.navigate('Chat', { cData: item, chatType: 'cone' })}
-                underlayColor="rgba(255,255,255,0.05)"
+                underlayColor="#1C1D21"
                 style={styles.ListCard}
             >
                 <View style={styles.BuddyRow}>
@@ -192,23 +192,34 @@ const styles = EStyleSheet.create({
     Center: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingTop: '100rem' },
     ListContent: { paddingHorizontal: '20rem', paddingBottom: '40rem' },
     ListCard: {
-        backgroundColor: 'rgba(255,255,255,0.035)', borderRadius: '24rem',
-        marginBottom: '12rem', padding: '16rem', borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)',
+        backgroundColor: '#121317', borderRadius: '24rem',
+        marginBottom: '16rem', padding: '18rem', 
+        borderWidth: 1.2, borderColor: 'rgba(255,255,255,0.06)',
+        // Shadow for depth
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4.65,
+        elevation: 8,
     },
     BuddyRow: { flexDirection: 'row', alignItems: 'center' },
     AvatarContainer: { position: 'relative' },
-    Avatar: { width: '56rem', height: '56rem', borderRadius: '28rem', backgroundColor: 'rgba(255,255,255,0.05)' },
+    Avatar: { 
+        width: '52rem', height: '52rem', borderRadius: '26rem', 
+        backgroundColor: 'rgba(255,255,255,0.05)',
+        borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.1)'
+    },
     StatusDot: {
         position: 'absolute', bottom: '2rem', right: '2rem',
-        width: '14rem', height: '14rem', borderRadius: '7rem',
-        backgroundColor: '#7FFFD4', borderWidth: 3, borderColor: '#09090B',
+        width: '13rem', height: '13rem', borderRadius: '7rem',
+        backgroundColor: '#7FFFD4', borderWidth: 2.5, borderColor: '#121317',
     },
     BuddyInfo: { flex: 1, marginLeft: '16rem' },
     BuddyTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4rem' },
-    BuddyName: { fontSize: '17rem', fontFamily: 'GTWalsheimProBold', color: '#FFFFFF', flex: 1, marginRight: '8rem' },
-    Timestamp: { fontSize: '11rem', fontFamily: 'GTWalsheimProRegular', color: 'rgba(255,255,255,0.3)' },
+    BuddyName: { fontSize: '17.5rem', fontFamily: 'GTWalsheimProBold', color: '#FFFFFF', flex: 1, marginRight: '8rem' },
+    Timestamp: { fontSize: '11rem', fontFamily: 'GTWalsheimProRegular', color: 'rgba(255,255,255,0.25)' },
     BuddyBottom: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-    LastMessage: { fontSize: '14rem', fontFamily: 'GTWalsheimProRegular', color: 'rgba(255,255,255,0.5)', flex: 1, marginRight: '10rem' },
+    LastMessage: { fontSize: '14.5rem', fontFamily: 'GTWalsheimProRegular', color: 'rgba(255,255,255,0.4)', flex: 1, marginRight: '10rem' },
     UnreadText: { color: '#FFFFFF', fontFamily: 'GTWalsheimProMedium' },
     UnreadBadge: {
         backgroundColor: '#7FFFD4', height: '22rem', minWidth: '22rem',
@@ -216,11 +227,22 @@ const styles = EStyleSheet.create({
     },
     UnreadCount: { fontSize: '11rem', fontFamily: 'GTWalsheimProBold', color: '#09090B' },
     RowBack: {
-        backgroundColor: '#FF4E4E', borderRadius: '24rem', height: '88rem',
-        justifyContent: 'center', alignItems: 'flex-end', marginBottom: '12rem',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'flex-end',
+        paddingRight: '10rem',
+        height: '100%',
+        paddingBottom: '16rem', // Match ListCard marginBottom
     },
-    DeleteAction: { width: '90rem', height: '100%', alignItems: 'center', justifyContent: 'center' },
-    DeleteActionText: { color: '#FFFFFF', fontSize: '12rem', fontFamily: 'GTWalsheimProBold', marginTop: '4rem' },
+    DeleteAction: { 
+        width: '74rem', 
+        height: '74rem', 
+        backgroundColor: '#E53E3E', 
+        borderRadius: '22rem', 
+        alignItems: 'center', 
+        justifyContent: 'center' 
+    },
+    DeleteActionText: { color: '#FFFFFF', fontSize: '11rem', fontFamily: 'GTWalsheimProBold', marginTop: '4rem' },
     // BottomSheet
     BottomSheetContainer: { paddingHorizontal: '16rem', paddingBottom: '20rem' },
     BsCard: {

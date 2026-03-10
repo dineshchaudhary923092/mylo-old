@@ -21,6 +21,8 @@ import { getDeviceType } from 'react-native-device-info';
 import EStyleSheet from 'react-native-extended-stylesheet';
 import Contacts from 'react-native-contacts';
 import { KeyboardAwareScrollView } from '@codler/react-native-keyboard-aware-scroll-view'
+import Feather from 'react-native-vector-icons/Feather';
+import { StyleSheet } from 'react-native';
 
 let deviceType = getDeviceType();
 
@@ -39,6 +41,8 @@ const ManageGroupsScreen = ({ navigation, route }) => {
     const bs = useRef(null);
     const bsOne = useRef(null);
     const [fall, setFall] = useState(new Animated.Value(1));
+    const [isBsOpen, setIsBsOpen] = useState(false);
+    const [isBsOneOpen, setIsBsOneOpen] = useState(false);
     const [groupImg, setGroupImg] = useState(null);
     const [imageData, setImageData] = useState(null);
     const [allBuddies, setAllBuddies] = useState(null);
@@ -265,123 +269,102 @@ const ManageGroupsScreen = ({ navigation, route }) => {
         filteredUsers(value);
     }
 
-    const renderBsOneContent = (socket) => (
-        <KeyboardAwareScrollView 
-            enableOnAndroid={true} 
-            enableAutomaticScroll={true} 
-            keyboardShouldPersistTaps='always' 
-            style={{minHeight: '100%', backgroundColor: colors.sheet}}
-        >
-            <View style={[styles.BottomSheet, {backgroundColor: colors.sheet}]}>
+    const renderBsOneContent = () => (
+        <View style={styles.DrawerContainer}>
+            <View style={styles.DrawerCard}>
+                <View style={styles.DrawerIndicator} />
                 <View style={styles.DrawerHeader}>
-                    <Text style={[styles.DrawerTitle, {color: colors.pText}]}>Buddies</Text>
-                    <TouchableOpacity 
-                        style={styles.CloseDrawer}
-                        onPress={() => {
-                            if (bsOne.current) {
-                                bsOne.current.snapTo(1);
-                            }
-                        }}
-                    >
-                        <Text style={[styles.CloseDrawerText, {color: theme.dark ? '#79B7F8' : '#3f97f6'}]}>cancel</Text>
+                    <Text style={styles.DrawerTitle}>Buddies</Text>
+                    <TouchableOpacity onPress={() => bsOne.current.snapTo(1)}>
+                        <Text style={styles.DrawerCancelText}>Cancel</Text>
                     </TouchableOpacity>
                 </View>
-                <View style={[styles.FormInputFieldStyle, styles.FormInputFieldVarStyle, {backgroundColor: colors.background}]}>
-                    <Octicons 
-                        name="search" 
-                        size={
-                            deviceType === 'Tablet' ? 
-                            EStyleSheet.value('12rem') :
-                            EStyleSheet.value('18rem')
-                        } 
-                        color={colors.pText} 
-                        style={{
-                            width: deviceType === 'Tablet' ? 
-                            EStyleSheet.value('16rem') :
-                            EStyleSheet.value('25rem'),  
-                            alignSelf: 'center'
-                        }} 
-                    />
+                <View style={styles.SearchWrapper}>
+                    <Octicons name="search" size={18} color="rgba(255,255,255,0.4)" />
                     <TextInput
                         autoCapitalize='none'
                         autoCorrect={false}
-                        style={[styles.FormTextInputStyle, {color: colors.pText}]}
-                        placeholder="Search..."
-                        placeholderTextColor={colors.light}
+                        style={styles.SearchInput}
+                        placeholder="Search buddies..."
+                        placeholderTextColor="rgba(255,255,255,0.3)"
                         keyboardAppearance="dark"
-                        onChangeText={(value) => searchContactsChange(value)}
                     />
                 </View>
-                <View style={[styles.DrawerBody, {flex: 1}]}>
-                    {
-                        allBuddies === null ?
-                        <View style={{ paddingTop: EStyleSheet.value('50rem') }}>
-                            <ActivityIndicator color={colors.pText} size="large" />
-                        </View> : 
-                        allBuddies === 'empty' ?
-                        <Text style={[styles.emptyText, {color: colors.pText}]}>No Contacts Found</Text> :
-                        <FlatList 
-                            style={styles.ListWrap}
-                            data={allBuddies}
-                            keyExtractor={ (item, index) => item.phone ? item.phone.toString() : index.toString() }
-                            renderItem={ ({ item }) => {
-                                return (
-                                    <View 
-                                        style={[styles.ListItem, {borderBottomColor: colors.lighter}]}
-                                    >
-                                        <View style={styles.ListItemBody}>
-                                            <Image 
-                                                source={require('../assets/profile-user.png')} 
-                                                resizeMode='cover' 
-                                                style={styles.ListItemImg}
-                                            />
-                                            <View style={styles.ListItemTextWrap}>
-                                                <Text ellipsizeMode='tail' numberOfLines={1} style={[styles.ListItemText, {color: colors.pText}]}>{item.name}</Text>
-                                                <Text style={[styles.ListItemSmText, {color: colors.light}]}>{item.phone}</Text>
-                                            </View>
-                                        </View>
-                                        <TouchableOpacity
-                                            style={styles.DrawerBuddyAdd}
-                                            onPress={() => handleAddBuddy(item.id)}
-                                        >
-                                            <Text style={styles.DrawerBuddyAddText}>{item.localBtnText}</Text>
-                                        </TouchableOpacity>
-                                    </View>      
-                                )
-                            }}
-                        />   
-                    }
+                <View style={styles.DrawerBody}>
+                    <FlatList 
+                        data={allBuddies === 'empty' ? [] : allBuddies || []}
+                        keyExtractor={ (item, index) => item.phone ? item.phone.toString() : index.toString() }
+                        scrollEnabled={true}
+                        contentContainerStyle={{ paddingBottom: 100 }}
+                        ListEmptyComponent={() => (
+                            <View style={{ paddingTop: '40rem' }}>
+                                {allBuddies === null ? (
+                                    <ActivityIndicator color="#7FFFD4" size="large" />
+                                ) : (
+                                    <Text style={styles.emptyText}>No Contacts Found</Text>
+                                )}
+                            </View>
+                        )}
+                        renderItem={ ({ item }) => (
+                            <View style={styles.SheetContactItem}>
+                                <Image 
+                                    source={require('../assets/profile-user.png')} 
+                                    style={styles.SheetContactImg}
+                                />
+                                <View style={styles.ContactInfo}>
+                                    <Text style={styles.SheetContactName}>{item.name}</Text>
+                                    <Text style={styles.SheetContactPhone}>{item.phone}</Text>
+                                </View>
+                                <TouchableOpacity
+                                    style={[styles.SheetAddBtn, item.localBtnText === 'remove' && styles.SheetAddBtnActive]}
+                                    onPress={() => handleAddBuddy(item.id)}
+                                >
+                                    <Feather 
+                                        name={item.localBtnText === 'add' ? "plus" : "check"} 
+                                        size={18} 
+                                        color="#7FFFD4" 
+                                    />
+                                </TouchableOpacity>
+                            </View>      
+                        )}
+                    />   
                 </View>
-            </View> 
-        </KeyboardAwareScrollView>
+            </View>
+        </View>
     );
 
     const renderBsContent = () => (
-        <View style={[styles.BottomSheet, { backgroundColor: colors.sheet }]}>
-            <Text style={[styles.BsTitle, { color: colors.pText }]}>Upload Photo</Text>
-            <Text style={[styles.BsTitleSmall, { color: colors.text, opacity: 0.65 }]}>Choose your Profile Picture</Text>
-            <TouchableOpacity
-                style={styles.SubmitContainer}
-                onPress={() => chooseFromLibrary()}
-            >
-                <Text style={styles.SubmitText}>Choose from Library</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-                style={styles.SubmitContainer}
-                onPress={() => takePhoto()}
-            >
-                <Text style={styles.SubmitText}>Take Photo</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-                style={styles.SubmitContainer}
-                onPress={() => {
-                    if (bs.current) {
-                        bs.current.snapTo(1);
-                    }
-                }}
-            >
-                <Text style={styles.SubmitText}>Cancel</Text>
-            </TouchableOpacity>
+        <View style={styles.DrawerContainer}>
+            <View style={[styles.DrawerCard, { height: 'auto', paddingBottom: EStyleSheet.value('40rem') }]}>
+                <View style={styles.DrawerIndicator} />
+                <View style={styles.DrawerHeader}>
+                    <Text style={styles.DrawerTitle}>Upload Photo</Text>
+                    <TouchableOpacity onPress={() => bs.current.snapTo(1)}>
+                        <Text style={styles.DrawerCancelText}>Cancel</Text>
+                    </TouchableOpacity>
+                </View>
+                
+                <View style={styles.DrawerBody}>
+                    <TouchableOpacity
+                        style={styles.BsOptionBtn}
+                        onPress={() => chooseFromLibrary()}
+                    >
+                        <View style={styles.BsIconWrap}>
+                            <Feather name="image" size={20} color="#7FFFD4" />
+                        </View>
+                        <Text style={styles.BsOptionText}>Choose from Library</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={[styles.BsOptionBtn, { borderBottomWidth: 0 }]}
+                        onPress={() => takePhoto()}
+                    >
+                        <View style={styles.BsIconWrap}>
+                            <Feather name="camera" size={20} color="#7FFFD4" />
+                        </View>
+                        <Text style={styles.BsOptionText}>Take Photo</Text>
+                    </TouchableOpacity>
+                </View>
+            </View>
         </View>
     );
 
@@ -425,47 +408,66 @@ const ManageGroupsScreen = ({ navigation, route }) => {
     }
 
     return (
-        <View style={[styles.Container, { backgroundColor: colors.background }]}>
+        <View style={styles.Container}>
+            <Animated.View
+                style={[
+                    styles.Backdrop,
+                    {
+                        opacity: Animated.interpolate(fall, {
+                            inputRange: [0, 1],
+                            outputRange: [0.65, 0],
+                        }),
+                    },
+                ]}
+                pointerEvents={(isBsOpen || isBsOneOpen) ? 'auto' : 'none'}
+            >
+                <TouchableOpacity
+                    style={{ flex: 1 }}
+                    activeOpacity={1}
+                    onPress={() => {
+                        bs.current.snapTo(1);
+                        bsOne.current.snapTo(1);
+                    }}
+                />
+            </Animated.View>
+
             <BottomSheet
                 ref={bs}
-                snapPoints={[
-                    screenHeight > 720 ?
-                        deviceType === 'Tablet' ? 450 : 350
-                        : 320, 0
-                ]}
+                snapPoints={[340, 0]}
                 renderContent={renderBsContent}
-                renderHeader={renderBsHeader}
-                enabledGestureInteraction={Platform.OS === 'android' ? false : true}
+                enabledGestureInteraction={true}
                 initialSnap={1}
                 callbackNode={fall}
+                onCloseEnd={() => setIsBsOpen(false)}
+                onOpenStart={() => setIsBsOpen(true)}
             />
             <BottomSheet
                 ref={bsOne}
-                snapPoints={[
-                    screenHeight > 720 ?
-                        deviceType === 'Tablet' ?
-                            Dimensions.get('window').height * 0.90 :
-                            Dimensions.get('window').height * 0.825
-                        : Dimensions.get('window').height * 0.85, 0
-                ]}
+                snapPoints={[Dimensions.get('window').height * 0.82, 0]}
                 renderContent={renderBsOneContent}
-                enabledGestureInteraction={Platform.OS === 'android' ? false : true}
+                enabledGestureInteraction={true}
                 initialSnap={1}
                 callbackNode={fall}
+                onCloseEnd={() => setIsBsOneOpen(false)}
+                onOpenStart={() => setIsBsOneOpen(true)}
             />
-            <StatusBarComponent bgcolor={colors.background} barStyle={theme.dark ? 'light' : 'dark'} />
+            <StatusBarComponent bgcolor="#09090B" barStyle="light-content" />
             <KeyboardAwareScrollView
                 style={{ flex: 1 }}
                 keyboardShouldPersistTaps='always'
                 enableOnAndroid={true}
                 enableAutomaticScroll={true}
             >
-                <Animated.View style={{ opacity: Animated.add(0.1, Animated.multiply(fall, 1)) }}>
-                    <View style={[styles.TopBarStyle, { backgroundColor: colors.background }]}>
-                        <Text style={[styles.TopBarBtnText, { color: colors.pText }]}>{type} Group</Text>
-                        <TouchableOpacity onPress={() => navigation.goBack()}>
-                            <AntDesign name="arrowleft" style={[styles.BackBtn, { color: colors.pText }]} />
+                <Animated.View style={{ opacity: Animated.add(0.1, Animated.multiply(fall, 1)), flex: 1 }}>
+                    <View style={styles.Header}>
+                        <TouchableOpacity 
+                            onPress={() => navigation.goBack()}
+                            style={styles.HeaderBackBtn}
+                        >
+                            <Feather name="chevron-left" size={24} color="#FFFFFF" />
                         </TouchableOpacity>
+                        <Text style={styles.HeaderTitle}>{type} Group</Text>
+                        <View style={{ width: EStyleSheet.value('40rem') }} />
                     </View>
                     {
                         loading ?
@@ -473,146 +475,92 @@ const ManageGroupsScreen = ({ navigation, route }) => {
                             <ActivityIndicator color={colors.pText} size="large" />
                         </View> :
                         <View>
-                            <View style={styles.GroupPhotoWrap}>
+                            <View style={styles.GroupPhotoSection}>
                                 <TouchableOpacity
-                                    style={{ position: 'relative' }}
-                                    onPress={() => {
-                                        if (bs.current) {
-                                            bs.current.snapTo(0);
-                                        }
-                                    }}
+                                    activeOpacity={0.9}
+                                    onPress={() => bs.current.snapTo(0)}
+                                    style={styles.AvatarBtn}
                                 >
                                     <Image
-                                        source={require('../assets/profile-user.png')}
-                                        resizeMode='cover'
-                                        style={styles.GroupPhotoImg}
+                                        source={groupImg ? { uri: groupImg } : require('../assets/profile-user.png')}
+                                        style={styles.GroupAvatar}
                                     />
-                                    <View style={styles.ImageEdit}>
-                                        <FontAwesome5 name='camera' style={styles.ImageEditIcon} />
+                                    <View style={styles.CameraBadge}>
+                                        <Feather name='camera' size={14} color="#09090B" />
                                     </View>
                                 </TouchableOpacity>
+                                <Text style={styles.AvatarHint}>Set group cover photo</Text>
                             </View>
-                            <View style={styles.FormContainer}>
-                                <View style={[styles.FormInputStyle, { marginBottom: 20 }]}>
-                                    <Text style={[styles.FormInputLabelStyle, { color: colors.pText }]}>Group Name</Text>
-                                    <View style={[styles.FormInputFieldStyle, { borderColor: theme.dark ? colors.primary : colors.light }]}>
-                                        <MaterialIcons
-                                            name="group"
-                                            size={
-                                                deviceType === 'Tablet' ?
-                                                    EStyleSheet.value('12rem') :
-                                                    EStyleSheet.value('18rem')
-                                            }
-                                            color={colors.pText}
-                                            style={{
-                                                width: deviceType === 'Tablet' ?
-                                                    EStyleSheet.value('16rem') :
-                                                    EStyleSheet.value('25rem'),
-                                                alignSelf: 'center'
-                                            }}
-                                        />
+                            <View style={styles.FormSection}>
+                                <View style={styles.InputGroup}>
+                                    <Text style={styles.InputLabel}>Group Name</Text>
+                                    <View style={[styles.InputWrapper, !groupName.isValid && styles.InputWrapperError]}>
+                                        <Feather name="users" size={18} color="rgba(255,255,255,0.4)" />
                                         <TextInput
                                             autoCapitalize='none'
                                             autoCorrect={false}
-                                            style={[styles.FormTextInputStyle, { color: colors.pText }]}
-                                            placeholderTextColor={colors.light}
-                                            placeholder="Enter Group Name"
+                                            style={styles.Input}
+                                            placeholderTextColor="rgba(255,255,255,0.3)"
+                                            placeholder="Enter brilliant group name..."
                                             value={groupName.gName}
                                             onChangeText={(value) => groupNameInputChange(value)}
+                                            keyboardAppearance="dark"
                                         />
                                     </View>
-                                    {
-                                        groupName.isValid ? null :
-                                            <Text style={[styles.errorText, { color: colors.text }]}>Group name should be minimum 3 characters</Text>
-                                    }
+                                    {!groupName.isValid && <Text style={styles.ErrorText}>Minimum 3 characters required</Text>}
                                 </View>
-                                <View style={[styles.borderWrapper, { borderBottomColor: colors.lighter }]}>
-                                    <View style={styles.FormInputStyle}>
-                                        <View style={styles.FormRow}>
-                                            <Text style={[styles.FormInputLabelStyle, { paddingBottom: 0, color: colors.pText }]}>Add Buddies</Text>
-                                            <TouchableOpacity
-                                                onPress={() => {
-                                                    addBuddies();
-                                                }}
-                                            >
-                                                <MaterialIcons
-                                                    name="add-circle"
-                                                    size={
-                                                        deviceType === 'Tablet' ?
-                                                            EStyleSheet.value('18rem') :
-                                                            EStyleSheet.value('28rem')
-                                                    }
-                                                    color={colors.pText}
-                                                    style={{
-                                                        paddingRight:
-                                                            deviceType === 'Tablet' ?
-                                                                EStyleSheet.value('14rem') :
-                                                                EStyleSheet.value('20rem')
-                                                    }}
-                                                />
-                                            </TouchableOpacity>
-                                        </View>
+                                <View style={styles.BuddiesSection}>
+                                    <View style={styles.SectionHeader}>
+                                        <Text style={styles.InputLabel}>Add Buddies</Text>
+                                        <TouchableOpacity 
+                                            onPress={() => addBuddies()}
+                                            style={styles.BuddyAddIconBtn}
+                                        >
+                                            <Feather name="plus-circle" size={24} color="#7FFFD4" />
+                                        </TouchableOpacity>
                                     </View>
-                                    <View style={[styles.AddedCount, { borderBottomColor: colors.lighter }]}>
-                                        {
-                                            allBuddies != 'empty' && allBuddies != null ?
-                                            <Text style={[styles.AddedCountText, { color: colors.pText }]}>
-                                                {
-                                                    allBuddies.filter(value => value.localBtnText === 'remove').length === 1 ?
-                                                        '1 Buddy Added' :
-                                                        `${allBuddies.filter(value => value.localBtnText === 'remove').length} Buddies Added`
-                                                }
-                                            </Text>
-                                            : <Text style={[styles.AddedCountText, { color: colors.pText }]}>Added buddies shown here</Text>
-                                        }
-                                    </View>
+                                </View>
+                                <View style={styles.AddedList}>
                                     <FlatList
                                         data={allBuddies}
                                         keyExtractor={(item, index) => item.phone ? item.phone.toString() : index.toString()}
+                                        scrollEnabled={false}
                                         extraData={reRenderList}
-                                        renderItem={({ item }) => {
+                                        renderItem={({ item, index }) => {
                                             if (item.localBtnText === 'remove') {
                                                 return (
-                                                    <View
-                                                        style={[styles.ListItem, { borderBottomColor: colors.lighter }]}
-                                                    >
-                                                        <View style={styles.ListItemBody}>
-                                                            <Image
-                                                                source={require('../assets/profile-user.png')}
-                                                                resizeMode='cover'
-                                                                style={styles.ListItemImg}
-                                                            />
-                                                            <View style={styles.ListItemTextWrap}>
-                                                                <Text ellipsizeMode='tail' numberOfLines={1} style={[styles.ListItemText, { color: colors.pText, }]}>{item.name}</Text>
-                                                                <Text style={[styles.ListItemSmText, { color: colors.light }]}>{item.phone}</Text>
-                                                            </View>
-                                                        </View>
-                                                        <TouchableOpacity
-                                                            style={[styles.DrawerBuddyAdd, { backgroundColor: '#232323' }]}
-                                                            onPress={() => handleAddBuddy(item.id)}
-                                                        >
-                                                            <Text style={styles.DrawerBuddyAddText}>{item.localBtnText}</Text>
-                                                        </TouchableOpacity>
-                                                    </View>
+                                        <View key={index} style={styles.SheetContactItem}>
+                                            <Image
+                                                source={item.image ? { uri: item.image } : require('../assets/profile-user.png')}
+                                                style={styles.SheetContactImg}
+                                            />
+                                            <View style={styles.ContactInfo}>
+                                                <Text style={styles.SheetContactName}>{item.name}</Text>
+                                                <Text style={styles.SheetContactPhone}>{item.phone}</Text>
+                                            </View>
+                                            <TouchableOpacity
+                                                style={styles.SheetRemoveBtn}
+                                                onPress={() => handleRemoveBuddy(item.id)}
+                                            >
+                                                <Feather name="x" size={16} color="#FF4E4E" />
+                                            </TouchableOpacity>
+                                        </View>
                                                 )
                                             }
                                         }}
                                     />
                                 </View>
                                 <TouchableOpacity
-                                    style={[styles.SubmitContainer, styles.SubmitContainerVar]}
+                                    style={styles.SubmitBtn}
+                                    activeOpacity={0.85}
                                     disabled={buttonDisabled}
-                                    onPress={() => {
-                                        setButtonDisabled(true);
-                                        handleManageGroup(imageData, groupName, allBuddies)
-                                    }}
+                                    onPress={() => handleManageGroup(imageData, groupName, allBuddies)}
                                 >
-                                    {
-                                        buttonDisabled ?
-                                            <ActivityIndicator color={Colors.dark} />
-                                            :
-                                            <Text style={styles.SubmitText}>{type === 'Edit' ? 'Update' : 'Add'} Group</Text>
-                                    }
+                                    {buttonDisabled ? (
+                                        <ActivityIndicator color="#09090B" />
+                                    ) : (
+                                        <Text style={styles.SubmitBtnText}>{type === 'Edit' ? 'Save Changes' : 'Create Group'}</Text>
+                                    )}
                                 </TouchableOpacity>
                             </View>
                         </View>
@@ -623,289 +571,138 @@ const ManageGroupsScreen = ({ navigation, route }) => {
     )
 }
 
-const screenHeight = Dimensions.get('window').height;
-
 const styles = EStyleSheet.create({
-    Container: {
-        flex: 1,
+    Container: { flex: 1, backgroundColor: '#09090B' },
+    Backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: '#000000', zIndex: 50 },
+    Header: {
+        flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+        paddingHorizontal: '20rem', paddingTop: '60rem', paddingBottom: '20rem',
     },
-    TopBarStyle: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        marginHorizontal: deviceType === 'Tablet' ? '14rem' : '20rem',
+    HeaderBackBtn: {
+        width: '40rem', height: '40rem', borderRadius: '20rem',
+        backgroundColor: 'rgba(255,255,255,0.05)', alignItems: 'center', justifyContent: 'center',
+        borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
     },
-    TopBarBtnText: {
-        fontSize: deviceType === 'Tablet' ? '18rem' : '30rem',
-        fontFamily: 'GTWalsheimProMedium',
-        paddingVertical: deviceType === 'Tablet' ? '14rem' : '20rem',
+    HeaderTitle: { fontSize: '20rem', fontFamily: 'GTWalsheimProBold', color: '#FFFFFF' },
+    
+    GroupPhotoSection: { alignItems: 'center', marginTop: '10rem', marginBottom: '30rem' },
+    AvatarBtn: { position: 'relative' },
+    GroupAvatar: { 
+        width: '110rem', height: '110rem', borderRadius: '55rem',
+        borderWidth: 3, borderColor: 'rgba(127,255,212,0.15)',
     },
-    BackBtn: {
-        fontSize: deviceType === 'Tablet' ? '18rem' : '30rem',
+    CameraBadge: {
+        position: 'absolute', bottom: '2rem', right: '2rem',
+        width: '32rem', height: '32rem', borderRadius: '16rem',
+        backgroundColor: '#7FFFD4', alignItems: 'center', justifyContent: 'center',
+        borderWidth: 3, borderColor: '#09090B',
     },
-    GroupPhotoWrap: {
-        marginHorizontal: deviceType === 'Tablet' ? '14rem' : '20rem',
-        marginVertical: deviceType === 'Tablet' ? '9rem' : '15rem',
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingHorizontal: deviceType === 'Tablet' ? '9rem' : '15rem',
-        borderRadius: deviceType === 'Tablet' ? '8rem' : '12rem',
+    AvatarHint: { 
+        fontSize: '13rem', fontFamily: 'GTWalsheimProRegular', 
+        color: 'rgba(255,255,255,0.4)', marginTop: '12rem' 
     },
-    GroupPhotoImg: {
-        height: deviceType === 'Tablet' ? '70rem' : '100rem',
-        width: deviceType === 'Tablet' ? '70rem' : '100rem',
-        borderRadius: deviceType === 'Tablet' ? '35rem' : '50rem',
+
+    FormSection: { paddingHorizontal: '20rem' },
+    InputGroup: { marginBottom: '25rem' },
+    InputLabel: { 
+        fontSize: '14rem', fontFamily: 'GTWalsheimProBold', 
+        color: '#FFFFFF', marginBottom: '12rem', marginLeft: '4rem' 
     },
-    ImageEdit: {
-        position: 'absolute',
-        bottom: 0,
-        right: 0,
-        backgroundColor: Colors.dark,
-        height: deviceType === 'Tablet' ? '24rem' : '35rem',
-        width: deviceType === 'Tablet' ? '24rem' : '35rem',
-        borderRadius: deviceType === 'Tablet' ? '14rem' : '20rem',
-        alignItems: 'center',
-        justifyContent: 'center'
+    InputWrapper: {
+        flexDirection: 'row', alignItems: 'center', height: '52rem',
+        backgroundColor: '#121317', borderRadius: '16rem',
+        paddingHorizontal: '16rem', borderWidth: 1.2, borderColor: 'rgba(255,255,255,0.08)',
     },
-    ImageEditIcon: {
-        fontSize: deviceType === 'Tablet' ? '9rem' : '14rem',
-        color: Colors.primary,
+    InputWrapperError: { borderColor: '#FF4E4E' },
+    Input: { flex: 1, marginLeft: '12rem', color: '#FFFFFF', fontSize: '15rem', fontFamily: 'GTWalsheimProRegular' },
+    ErrorText: { fontSize: '12rem', fontFamily: 'GTWalsheimProRegular', color: '#FF4E4E', marginTop: '6rem', marginLeft: '4rem' },
+
+    BuddiesSection: { marginTop: '10rem' },
+    SectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+    BuddyAddIconBtn: { padding: '4rem' },
+    
+    AddedList: { marginTop: '8rem' },
+    ContactImg: { width: '48rem', height: '48rem', borderRadius: '24rem', marginRight: '16rem' },
+    ContactInfo: { flex: 1 },
+    ContactName: { fontSize: '16rem', fontFamily: 'GTWalsheimProBold', color: '#FFFFFF' },
+    ContactPhone: { fontSize: '12rem', fontFamily: 'GTWalsheimProRegular', color: 'rgba(255,255,255,0.35)', marginTop: '2rem' },
+    
+    BuddyActionBtn: {
+        backgroundColor: 'rgba(127,255,212,0.1)', paddingHorizontal: '16rem',
+        paddingVertical: '8rem', borderRadius: '10rem',
     },
-    FormContainer: {
-        marginTop: deviceType === 'Tablet' ? '14rem' : '20rem',
-        paddingBottom: deviceType === 'Tablet' ? '26rem' : '40rem',
+    BuddyActionBtnRemove: { backgroundColor: 'rgba(255,78,78,0.1)' },
+    BuddyActionText: { fontSize: '13rem', fontFamily: 'GTWalsheimProBold', color: '#7FFFD4' },
+    BuddyActionTextRemove: { color: '#FF4E4E' },
+    RemoveBtn: { padding: '8rem' },
+
+    SubmitBtn: {
+        height: '56rem', backgroundColor: '#7FFFD4', borderRadius: '18rem',
+        alignItems: 'center', justifyContent: 'center', marginTop: '20rem', marginBottom: '40rem',
+        shadowColor: '#7FFFD4', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8,
     },
-    FormInputStyle: {
-        marginBottom: deviceType === 'Tablet' ? '14rem' : '20rem',
+    SubmitBtnText: { fontSize: '16rem', fontFamily: 'GTWalsheimProBold', color: '#09090B' },
+
+    // BottomSheet Styles
+    DrawerContainer: { paddingHorizontal: '12rem', paddingBottom: '20rem', height: '100%' },
+    DrawerCard: {
+        backgroundColor: '#121317', borderRadius: '32rem', height: '100%',
+        padding: '24rem', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
     },
-    FormInputLabelStyle: {
-        fontSize: deviceType === 'Tablet' ? '11rem' : '16rem',
-        fontFamily: 'GTWalsheimProLight',
-        paddingBottom: deviceType === 'Tablet' ? '7rem' : '10rem',
-        paddingLeft: deviceType === 'Tablet' ? '14rem' : '20rem',
+    BottomSheet: { padding: '24rem', borderTopLeftRadius: '32rem', borderTopRightRadius: '32rem' },
+    DrawerIndicator: {
+        width: '40rem', height: '5rem', borderRadius: '3rem',
+        backgroundColor: 'rgba(255,255,255,0.1)', alignSelf: 'center', marginBottom: '20rem',
     },
-    FormInputFieldStyle: {
-        flexDirection: 'row',
-        borderWidth: '1rem', 
-        height: deviceType === 'Tablet' ? '26rem' : '40rem',
-        borderRadius: deviceType === 'Tablet' ? '13rem' : '25rem',
-        paddingHorizontal: deviceType === 'Tablet' ? '9rem' : '14rem',
-        marginHorizontal: deviceType === 'Tablet' ? '14rem' : '20rem',
+    DrawerHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20rem' },
+    DrawerTitle: { fontSize: '20rem', fontFamily: 'GTWalsheimProBold', color: '#FFFFFF' },
+    DrawerCancelText: { fontSize: '15rem', fontFamily: 'GTWalsheimProBold', color: '#FF4E4E' },
+    SearchWrapper: {
+        flexDirection: 'row', alignItems: 'center', height: '48rem',
+        backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: '14rem',
+        paddingHorizontal: '16rem', marginBottom: '16rem',
+        borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)',
     },
-    FormInputFieldVarStyle: {
-        borderRadius: deviceType === 'Tablet' ? '5rem' : '8rem',
-        borderWidth: 0,
-        marginVertical: deviceType === 'Tablet' ? '8rem' : '12rem',
+    SearchInput: { flex: 1, marginLeft: '12rem', color: '#FFFFFF', fontSize: '15rem' },
+    DrawerBody: { marginTop: '10rem' },
+    SheetContactItem: {
+        flexDirection: 'row', alignItems: 'center', paddingVertical: '10rem',
+        marginBottom: '8rem',
     },
-    FormTextInputStyle: {
-        flex: 1,
-        fontSize: deviceType === 'Tablet' ? '9rem' : '13rem',
-        height: deviceType === 'Tablet' ? '26rem' : '40rem',
+    SheetContactImg: { 
+        width: '48rem', height: '48rem', borderRadius: '24rem', marginRight: '16rem',
+        borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.08)'
     },
-    FormRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
+    SheetContactName: { fontSize: '16.5rem', fontFamily: 'GTWalsheimProBold', color: '#FFFFFF', marginBottom: '2rem' },
+    SheetContactPhone: { fontSize: '12rem', fontFamily: 'GTWalsheimProRegular', color: 'rgba(255,255,255,0.35)' },
+    SheetAddBtn: {
+        width: '32rem', height: '32rem', borderRadius: '16rem',
+        backgroundColor: 'rgba(127,255,212,0.1)', alignItems: 'center', justifyContent: 'center',
     },
-    borderWrapper: {
-        paddingTop: deviceType === 'Tablet' ? '14rem' : '20rem',
-        borderBottomWidth: '1rem'
+    SheetAddBtnActive: {
+        backgroundColor: 'rgba(127,255,212,0.25)',
     },
-    SubmitContainer: {
-        height: deviceType === 'Tablet' ? '26rem' : '40rem',
-        borderRadius: deviceType === 'Tablet' ? '13rem' : '25rem',
-        backgroundColor: Colors.primary,
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginTop: deviceType === 'Tablet' ? '14rem' : '20rem',
+    SheetRemoveBtn: {
+        width: '32rem', height: '32rem', borderRadius: '16rem',
+        backgroundColor: 'rgba(255,78,78,0.1)', alignItems: 'center', justifyContent: 'center',
     },
-    SubmitContainerVar: {
-        marginTop: deviceType === 'Tablet' ? '9rem' : '15rem',
-        marginHorizontal: deviceType === 'Tablet' ? '14rem' : '20rem',
-        marginTop: deviceType === 'Tablet' ? '18rem' : '30rem',
+    BsTitle: { fontSize: '20rem', fontFamily: 'GTWalsheimProBold', color: '#FFFFFF', textAlign: 'center' },
+    BsTitleSmall: { 
+        fontSize: '14rem', fontFamily: 'GTWalsheimProRegular', 
+        color: 'rgba(255,255,255,0.4)', textAlign: 'center', marginTop: '6rem', marginBottom: '20rem' 
     },
-    SubmitText: {
-        fontSize: deviceType === 'Tablet' ? '11rem' : '16rem',
-        color: Colors.dark,
-        fontFamily: 'GTWalsheimProMedium',
+    BsOptionBtn: {
+        flexDirection: 'row', alignItems: 'center', paddingVertical: '16rem',
+        borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.05)',
     },
-    BottomSheet: {
-        paddingTop: deviceType === 'Tablet' ? '12rem' : '16rem',
-        height: '100%',
-        borderTopLeftRadius: deviceType === 'Tablet' ? '14rem' : '20rem',
-        borderTopRightRadius: deviceType === 'Tablet' ? '14rem' : '20rem',
+    BsIconWrap: {
+        width: '40rem', height: '40rem', borderRadius: '12rem',
+        backgroundColor: 'rgba(127,255,212,0.1)', alignItems: 'center', justifyContent: 'center',
+        marginRight: '16rem',
     },
-    DrawerHeader: {
-        position: 'relative',
-        height: deviceType === 'Tablet' ? '18rem' : '30rem',
-    },
-    DrawerTitle: {
-        fontSize: deviceType === 'Tablet' ? '11rem' : '14rem',
-        fontFamily: 'GTWalsheimProMedium',
-        textAlign: 'center',
-        lineHeight: deviceType === 'Tablet' ? '18rem' : '30rem',
-    },
-    CloseDrawer: {
-        position: 'absolute',
-        top: 0,
-        bottom: 0,
-        right: deviceType === 'Tablet' ? '8rem' : '14rem',
-    },
-    CloseDrawerText: {
-        textTransform: "capitalize",
-        fontFamily: 'GTWalsheimProMedium',
-        lineHeight: deviceType === 'Tablet' ? '18rem' : '30rem',
-        fontSize: deviceType === 'Tablet' ? '10rem' : '14rem',
-    },
-    DrawerBuddyAdd: {
-        backgroundColor: Colors.dark,
-        borderRadius: deviceType === 'Tablet' ? '18rem' : '30rem',
-        paddingVertical: 0,
-        paddingHorizontal: deviceType === 'Tablet' ? '8rem' : '14rem',
-        height: deviceType === 'Tablet' ? '18rem' : '30rem',
-    },
-    DrawerBuddyAddText: {
-        color: Colors.primary,
-        fontSize: deviceType === 'Tablet' ? '7.5rem' : '13rem',
-        fontFamily: 'GTWalsheimProMedium',
-        lineHeight: deviceType === 'Tablet' ? '18rem' : '30rem',
-    },
-    DrawerBody: {
-        borderTopWidth: 1,
-        borderTopColor: 'rgba(255, 255, 255, 0.1)',
-    },
-    requestBtn: {
-        alignItems: 'flex-end',
-        paddingVertical: deviceType === 'Tablet' ? '8rem' : '14rem',
-        paddingHorizontal: deviceType === 'Tablet' ? '14rem' : '20rem',
-    },
-    requestBtnText: {
-        color: Colors.primary,
-        fontFamily: 'GTWalsheimProMedium',
-    },
-    emptyText: {
-        textAlign: 'center',
-        paddingVertical: deviceType === 'Tablet' ? '18rem' : '30rem',
-    },
-    BottomSheetVar: {
-        padding: 0,
-        paddingTop: deviceType === 'Tablet' ? '11rem' : '16rem',
-    },
-    bsHeader: {
-        height: deviceType === 'Tablet' ? '26rem' : '40rem',
-        alignItems: 'center',
-        justifyContent: 'flex-end',
-        paddingBottom: deviceType === 'Tablet' ? '8rem' : '12rem',
-    },
-    bsHandle: {
-        height: deviceType === 'Tablet' ? '4rem' : '6rem',
-        width: deviceType === 'Tablet' ? '35rem' : '50rem',
-        borderRadius: deviceType === 'Tablet' ? '2rem' : '3rem',
-    },
-    BsTitle: {
-        color: Colors.dark,
-        fontSize: deviceType === 'Tablet' ? '14rem' : '20rem',
-        fontFamily: 'GTWalsheimProMedium',
-        textAlign: 'center'
-    },
-    BsTitleSmall: {
-        fontSize: deviceType === 'Tablet' ? '9rem' : '14rem',
-        fontFamily: 'GTWalsheimProLight',
-        color: Colors.dark,
-        textAlign: 'center'
-    },
-    errorText: {
-        fontSize: deviceType === 'Tablet' ? '7.5rem' : '13rem',
-        color: '#fff',
-        fontFamily: 'GTWalsheimProLight',
-        paddingLeft: '2rem',
-        paddingTop: deviceType === 'Tablet' ? '2.8rem' : '4rem',
-        marginHorizontal: deviceType === 'Tablet' ? '14rem' : '20rem',
-    },
-    DrawerHeader: {
-        position: 'relative',
-        height: deviceType === 'Tablet' ? '18rem' : '30rem',
-    },
-    DrawerTitle: {
-        color: Colors.primary,
-        fontSize: deviceType === 'Tablet' ? '11rem' : '16rem',
-        fontFamily: 'GTWalsheimProMedium',
-        textAlign: 'center',
-        lineHeight: deviceType === 'Tablet' ? '18rem' : '30rem',
-    },
-    CloseDrawer: {
-        position: 'absolute',
-        top: 0,
-        bottom: 0,
-        right: deviceType === 'Tablet' ? '9rem' : '14rem',
-    },
-    CloseDrawerText: {
-        textTransform: "capitalize",
-        fontFamily: 'GTWalsheimProMedium',
-        lineHeight: deviceType === 'Tablet' ? '18rem' : '30rem',
-        fontSize: deviceType === 'Tablet' ? '10rem' : '14rem',
-    },
-    DrawerBuddyAdd: {
-        backgroundColor: Colors.dark,
-        borderRadius: deviceType === 'Tablet' ? '18rem' : '30rem',
-        paddingVertical: 0,
-        paddingHorizontal: deviceType === 'Tablet' ? '9rem' : '14rem',
-        height: deviceType === 'Tablet' ? '18rem' : '30rem',
-    },
-    DrawerBuddyAddText: {
-        color: Colors.primary,
-        fontSize: deviceType === 'Tablet' ? '7.5rem' : '13rem',
-        fontFamily: 'GTWalsheimProMedium',
-        lineHeight: deviceType === 'Tablet' ? '18rem' : '30rem',
-        textTransform: 'capitalize'
-    },
-    DrawerBody: {
-        borderTopWidth: '1rem',
-    },
-    ListItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        borderBottomWidth: '1rem',
-        paddingVertical: deviceType === 'Tablet' ? '9rem' : '14rem',
-        paddingHorizontal: deviceType === 'Tablet' ? '14rem' : '20rem',
-    },
-    ListItemBody: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        maxWidth: '75%',
-    },
-    ListItemImg: {
-        height: deviceType === 'Tablet' ? '30rem' : '42rem',
-        width: deviceType === 'Tablet' ? '30rem' : '42rem',
-        borderRadius: deviceType === 'Tablet' ? '18rem' : '30rem',
-    },
-    ListItemTextWrap: {
-        marginLeft: deviceType === 'Tablet' ? '8rem' : '12rem',
-        flex: 1
-    },
-    ListItemText: {
-        color: Colors.primary,
-        fontSize: deviceType === 'Tablet' ? '9.5rem' : '14rem',
-        fontFamily: 'GTWalsheimProRegular',
-    },
-    ListItemSmText: {
-        color: Colors.light,
-        fontSize: deviceType === 'Tablet' ? '8rem' : '12rem',
-        paddingTop: '2rem'
-    },
-    AddedCount: {
-        paddingHorizontal: deviceType === 'Tablet' ? '14rem' : '20rem',
-        borderBottomWidth: '1rem'
-    },
-    AddedCountText: {
-        fontSize: deviceType === 'Tablet' ? '9rem' : '14rem',
-        fontFamily: 'GTWalsheimProLight',
-        letterSpacing: 0.5,
-        paddingBottom: deviceType === 'Tablet' ? '7rem' : '10rem',
-        textAlign: 'right'
-    },
-})
+    BsOptionText: { fontSize: '16rem', fontFamily: 'GTWalsheimProMedium', color: '#FFFFFF' },
+    emptyText: { textAlign: 'center', color: 'rgba(255,255,255,0.4)', marginTop: '40rem' },
+});
 
 export default ManageGroupsScreen;
 

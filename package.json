@@ -3,16 +3,18 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "android": "react-native run-android",
-    "ios": "react-native run-ios",
-    "start": "react-native start",
+    "android": "NODE_OPTIONS=--openssl-legacy-provider react-native run-android",
+    "ios": "NODE_OPTIONS=--openssl-legacy-provider react-native run-ios",
+    "start": "NODE_OPTIONS=--openssl-legacy-provider react-native start",
     "test": "jest",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "postinstall": "sed -i '' '/#import <netinet6\\/in6.h>/d' node_modules/@mauron85/react-native-background-geolocation/ios/common/BackgroundGeolocation/Reachability.m"
   },
   "dependencies": {
     "@codler/react-native-keyboard-aware-scroll-view": "^1.0.1",
     "@mauron85/react-native-background-geolocation": "^0.6.3",
     "@react-native-community/async-storage": "^1.12.0",
+    "@react-native-community/blur": "3.6.0",
     "@react-native-community/masked-view": "^0.1.10",
     "@react-native-community/netinfo": "^5.9.7",
     "@react-navigation/bottom-tabs": "^5.9.1",

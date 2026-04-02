@@ -8,6 +8,7 @@ import { useIsFocused } from '@react-navigation/native';
 import useAxios from '../Hooks/useAxios';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import Feather from 'react-native-vector-icons/Feather';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useTheme } from '@react-navigation/native';
 import { getDeviceType } from 'react-native-device-info';
 import EStyleSheet from 'react-native-extended-stylesheet';
@@ -31,6 +32,7 @@ const ProfileScreen = ({ navigation }) => {
     const [activeFilter, setActiveFilter] = useState('All');
     const [isBsOpen, setIsBsOpen] = useState(false);
     const [isDarkMode, setIsDarkMode] = useState(true);
+    const [isOffline, setIsOffline] = useState(false);
     const [distance, setDistance] = useState([
         { dist: 5, selected: true },
         { dist: 10, selected: false },
@@ -59,7 +61,7 @@ const ProfileScreen = ({ navigation }) => {
 
     const renderAvatarSheet = () => (
         <View style={styles.BottomSheetContainer}>
-            <View style={styles.BsContentCard}>
+            <View style={[styles.BsContentCard, { paddingBottom: insets.bottom + (deviceType === 'Tablet' ? 20 : 32) }]}>
                 <View style={styles.BsIndicator} />
                 <Text style={styles.BsTitle}>Profile Picture</Text>
                 <Text style={styles.BsSubtitle}>Choose how you want to update your photo</Text>
@@ -98,7 +100,7 @@ const ProfileScreen = ({ navigation }) => {
     );
 
     const renderRadiusSheet = () => (
-        <View style={styles.BsContentCard}>
+        <View style={[styles.BsContentCard, { paddingBottom: insets.bottom + (deviceType === 'Tablet' ? 20 : 32) }]}>
             <View style={styles.BsIndicator} />
             <Text style={styles.BsTitle}>Alert Radius</Text>
             <Text style={styles.BsSubtitle}>Select the distance (km) for proximity alerts</Text>
@@ -176,7 +178,7 @@ const ProfileScreen = ({ navigation }) => {
 
             <BottomSheet
                 ref={bs}
-                snapPoints={[EStyleSheet.value('320rem'), 0]}
+                snapPoints={[EStyleSheet.value('360rem'), 0]}
                 renderContent={renderAvatarSheet}
                 enabledGestureInteraction={true}
                 initialSnap={1}
@@ -186,7 +188,7 @@ const ProfileScreen = ({ navigation }) => {
             />
             <BottomSheet
                 ref={bsPop}
-                snapPoints={[EStyleSheet.value('420rem'), 0]}
+                snapPoints={[EStyleSheet.value('460rem'), 0]}
                 renderContent={renderRadiusSheet}
                 enabledGestureInteraction={true}
                 initialSnap={1}
@@ -230,7 +232,7 @@ const ProfileScreen = ({ navigation }) => {
                                 >
                                     <View style={styles.ProfileImgBorder}>
                                         <Image 
-                                            source={{ uri: userData?.data?.user?.image || 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?q=80&w=300&auto=format&fit=crop' }} 
+                                            source={{ uri: userData?.data?.user?.image || 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=400&auto=format&fit=crop' }} 
                                             resizeMode='cover' 
                                             style={styles.ProfileImg}
                                         />
@@ -240,8 +242,8 @@ const ProfileScreen = ({ navigation }) => {
                                     </View>
                                 </TouchableOpacity>
                                 <View style={styles.ProfileInfo}>
-                                    <Text style={styles.ProfileNameText} numberOfLines={1}>{userData?.data?.user?.name || 'Alex Johnson'}</Text>
-                                    <Text style={styles.ProfilePhoneText}>{userData?.data?.user?.phone || '+1 (555) 000-0000'}</Text>
+                                    <Text style={styles.ProfileNameText} numberOfLines={1}>{userData?.data?.user?.name || 'Marcus Thorne'}</Text>
+                                    <Text style={styles.ProfilePhoneText}>{userData?.data?.user?.phone || '+1 (555) 777-8888'}</Text>
                                 </View>
                             </View>
                         </Animatable.View>
@@ -282,6 +284,27 @@ const ProfileScreen = ({ navigation }) => {
                                         <Feather name="chevron-right" size={20} color="rgba(255,255,255,0.2)" />
                                     </View>
                                 </TouchableOpacity>
+                                
+                                <View style={styles.SettingsCard}>
+                                    <View style={styles.SettingsItemLeft}>
+                                        <View style={styles.IconBox}>
+                                            <Feather name="eye-off" size={20} color="#7FFFD4" />
+                                        </View>
+                                        <View>
+                                            <Text style={styles.SettingsItemText}>Ghost Mode</Text>
+                                            <Text style={styles.SettingsSubText}>Hide your live location</Text>
+                                        </View>
+                                    </View>
+                                    <View style={{ marginRight: EStyleSheet.value('8rem') }}>
+                                        <Switch
+                                            trackColor={{ false: "#111214", true: "#FFB060" }}
+                                            thumbColor="#FFFFFF"
+                                            ios_backgroundColor="#111214"
+                                            value={isOffline}
+                                            onValueChange={val => setIsOffline(val)}
+                                        />
+                                    </View>
+                                </View>
                             </View>
 
                             <View style={styles.SettingsSection}>
@@ -407,6 +430,7 @@ const styles = EStyleSheet.create({
         alignItems: 'center', justifyContent: 'center', marginRight: '10rem',
     },
     SettingsItemText: { fontSize: '14rem', fontFamily: 'GTWalsheimProMedium', color: '#FFFFFF' },
+    SettingsSubText: { fontSize: '10.5rem', fontFamily: 'GTWalsheimProRegular', color: 'rgba(255,255,255,0.3)', marginTop: '2rem' },
     RightAction: { flexDirection: 'row', alignItems: 'center' },
     RadiusValText: { fontSize: '14rem', fontFamily: 'GTWalsheimProBold', color: '#7FFFD4', marginRight: '8rem' },
     FooterText: {
@@ -420,7 +444,7 @@ const styles = EStyleSheet.create({
     BsContentCard: {
         backgroundColor: '#111214', borderTopLeftRadius: '32rem', borderTopRightRadius: '32rem',
         padding: '24rem', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
-        height: '420rem',
+        // height: '420rem', // Removed fixed height for absolute content sizing
     },
     BsIndicator: {
         width: '40rem', height: '5rem', borderRadius: '3rem',
@@ -445,6 +469,7 @@ const styles = EStyleSheet.create({
     BsCancelFullBtn: {
         height: '52rem', borderRadius: '26rem',
         backgroundColor: 'rgba(255, 255, 255, 0.05)', alignItems: 'center', justifyContent: 'center',
+        marginTop: '10rem',
     },
     BsCancelFullBtnText: { fontSize: '15rem', fontFamily: 'GTWalsheimProBold', color: 'rgba(255, 255, 255, 0.5)' },
     RadiusGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', marginBottom: '32rem' },

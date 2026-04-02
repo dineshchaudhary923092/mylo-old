@@ -38,54 +38,39 @@ const BuddiesScreen = ({ navigation, socket }) => {
     const getBuddyData = async() => {
         setBuddyData([
             {
-                id: 1,
-                displayId: 1,
-                displayName: 'Sarah Mitchell',
-                displayImage: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=200&auto=format&fit=crop',
-                timePrint: { fromNow: '2m' },
-                message: { text: 'Hey! Are you free for the event tonight?', fromUserName: 'Sarah Mitchell', isOwner: 'no', seenPrint: { fromNow: '2m' } },
-                messageCount: 3,
-                online: true
+                id: 1, displayId: 1, displayName: 'Natalie Greene',
+                displayImage: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=200&auto=format&fit=crop',
+                timePrint: { fromNow: '4m' }, distance: '0.8 km', statusType: 'active',
+                message: { text: "The strategy deck looks clean. Let's sync at 2 PM.", fromUserName: 'Natalie Greene', isOwner: 'no', seenPrint: { fromNow: '4m' } },
+                messageCount: 2, online: true
             },
             {
-                id: 2,
-                displayId: 2,
-                displayName: 'James Carter',
-                displayImage: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200&auto=format&fit=crop',
-                timePrint: { fromNow: '1h' },
-                message: { text: 'Sounds good, let\'s meet at the entrance!', fromUserName: 'James Carter', isOwner: 'yes', seenPrint: { fromNow: '1h' } },
-                messageCount: 0,
-                online: false
+                id: 2, displayId: 2, displayName: 'Daniel Okafor',
+                displayImage: 'file:///Users/craftnotion/.gemini/antigravity/brain/533300fe-5c74-4c78-9696-5c550eafb3a4/avatar_daniel_okafor_1774337845031.png',
+                timePrint: { fromNow: '52m' }, distance: '2.4 km', statusType: 'active',
+                message: { text: 'I just pushed the final assets to the drive.', fromUserName: 'Daniel Okafor', isOwner: 'no', seenPrint: { fromNow: '52m' } },
+                messageCount: 0, online: true
             },
             {
-                id: 3,
-                displayId: 3,
-                displayName: 'Priya Sharma',
-                displayImage: 'https://images.unsplash.com/photo-1534751516642-a1af1ef26a56?q=80&w=200&auto=format&fit=crop',
-                timePrint: { fromNow: '3h' },
-                message: { text: 'Did you see the new community update?', fromUserName: 'Priya Sharma', isOwner: 'no', seenPrint: { fromNow: '3h' } },
-                messageCount: 1,
-                online: true
+                id: 3, displayId: 3, displayName: 'Isha Patel',
+                displayImage: 'file:///Users/craftnotion/.gemini/antigravity/brain/533300fe-5c74-4c78-9696-5c550eafb3a4/avatar_isha_patel_1774337863283.png',
+                timePrint: { fromNow: '1h' }, distance: 'Location Hidden', statusType: 'hidden',
+                message: { text: 'The client loved the glassmorphism approach!', fromUserName: 'Isha Patel', isOwner: 'no', seenPrint: { fromNow: '1h' } },
+                messageCount: 1, online: true
             },
             {
-                id: 4,
-                displayId: 4,
-                displayName: 'Alex Johnson',
-                displayImage: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?q=80&w=200&auto=format&fit=crop',
-                timePrint: { fromNow: '1d' },
-                message: { text: 'I\'ll send over the coordinates shortly.', fromUserName: 'Alex Johnson', isOwner: 'no', seenPrint: { fromNow: '1d' } },
-                messageCount: 0,
-                online: true
+                id: 4, displayId: 4, displayName: 'Ryan Callahan',
+                displayImage: 'file:///Users/craftnotion/.gemini/antigravity/brain/533300fe-5c74-4c78-9696-5c550eafb3a4/avatar_ryan_callahan_v2_1774337894779.png',
+                timePrint: { fromNow: '3h' }, distance: 'Offline', statusType: 'offline',
+                message: { text: "Got it. I'll take a look at the PR shortly.", fromUserName: 'Me', isOwner: 'yes', seenPrint: { fromNow: '3h' } },
+                messageCount: 0, online: false
             },
             {
-                id: 5,
-                displayId: 5,
-                displayName: 'Marcus Miller',
-                displayImage: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=200&auto=format&fit=crop',
-                timePrint: { fromNow: '2d' },
-                message: { text: 'Great catch earlier today!', fromUserName: 'Marcus Miller', isOwner: 'yes', seenPrint: { fromNow: '2d' } },
-                messageCount: 0,
-                online: false
+                id: 5, displayId: 5, displayName: 'Zoe Marchetti',
+                displayImage: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?q=80&w=200&auto=format&fit=crop',
+                timePrint: { fromNow: '1d' }, distance: '3.1 km', statusType: 'active',
+                message: { text: 'Are we still on for the design review tomorrow?', fromUserName: 'Zoe Marchetti', isOwner: 'no', seenPrint: { fromNow: '1d' } },
+                messageCount: 0, online: true
             },
         ]);
     }
@@ -140,7 +125,15 @@ const BuddiesScreen = ({ navigation, socket }) => {
                     </View>
                     <View style={styles.BuddyInfo}>
                         <View style={styles.BuddyTop}>
-                            <Text style={styles.BuddyName} numberOfLines={1}>{item.displayName}</Text>
+                            <View style={styles.BuddyNameRow}>
+                                <Text style={styles.BuddyName} numberOfLines={1}>{item.displayName}</Text>
+                                <View style={[styles.DistanceTag, item.statusType !== 'active' && styles.DistanceTagInactive]}>
+                                    <Feather name={item.statusType === 'hidden' ? "eye-off" : "map-pin"} size={9} color={item.statusType === 'active' ? "#7FFFD4" : "rgba(255,255,255,0.4)"} />
+                                    <Text style={[styles.DistanceText, item.statusType !== 'active' && styles.DistanceTextInactive]}>
+                                        {item.distance}
+                                    </Text>
+                                </View>
+                            </View>
                             <Text style={styles.Timestamp}>{item.timePrint.fromNow}</Text>
                         </View>
                         <View style={styles.BuddyBottom}>
@@ -216,7 +209,16 @@ const styles = EStyleSheet.create({
     },
     BuddyInfo: { flex: 1, marginLeft: '16rem' },
     BuddyTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4rem' },
-    BuddyName: { fontSize: '17.5rem', fontFamily: 'GTWalsheimProBold', color: '#FFFFFF', flex: 1, marginRight: '8rem' },
+    BuddyNameRow: { flex: 1, flexDirection: 'row', alignItems: 'center', marginRight: '8rem' },
+    BuddyName: { fontSize: '17.5rem', fontFamily: 'GTWalsheimProBold', color: '#FFFFFF', marginRight: '10rem' },
+    DistanceTag: { 
+        flexDirection: 'row', alignItems: 'center', 
+        backgroundColor: 'rgba(127,255,212,0.1)', paddingHorizontal: '8rem', 
+        paddingVertical: '3rem', borderRadius: '8rem',
+    },
+    DistanceTagInactive: { backgroundColor: 'rgba(255,255,255,0.05)' },
+    DistanceText: { fontSize: '10.5rem', fontFamily: 'GTWalsheimProBold', color: '#7FFFD4', marginLeft: '4rem' },
+    DistanceTextInactive: { color: 'rgba(255,255,255,0.4)' },
     Timestamp: { fontSize: '11rem', fontFamily: 'GTWalsheimProRegular', color: 'rgba(255,255,255,0.25)' },
     BuddyBottom: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
     LastMessage: { fontSize: '14.5rem', fontFamily: 'GTWalsheimProRegular', color: 'rgba(255,255,255,0.4)', flex: 1, marginRight: '10rem' },

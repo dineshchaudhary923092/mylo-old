@@ -49,11 +49,11 @@ const HomeScreen = (props) => {
 
     const openDrawer = () => {
         const dummyContacts = [
-            { name: 'Sarah Mitchell', phone: '+1 (555) 123-4567', image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=200&auto=format&fit=crop', idNormal: '1' },
-            { name: 'James Carter', phone: '+1 (555) 987-6543', image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200&auto=format&fit=crop', idNormal: '2' },
-            { name: 'Priya Sharma', phone: '+1 (555) 456-7890', image: 'https://images.unsplash.com/photo-1534751516642-a1af1ef26a56?q=80&w=200&auto=format&fit=crop', idNormal: '3' },
-            { name: 'Marcus Miller', phone: '+1 (555) 234-5678', image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=200&auto=format&fit=crop', idNormal: '4' },
-            { name: 'Elena Rodriguez', phone: '+1 (555) 345-6789', image: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=200&auto=format&fit=crop', idNormal: '5' }
+            { name: 'Natalie Greene', phone: '+1 (555) 123-4567', image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=200&auto=format&fit=crop', idNormal: '1' },
+            { name: 'Daniel Okafor', phone: '+1 (555) 987-6543', image: 'file:///Users/craftnotion/.gemini/antigravity/brain/533300fe-5c74-4c78-9696-5c550eafb3a4/avatar_daniel_okafor_1774337845031.png', idNormal: '2' },
+            { name: 'Isha Patel', phone: '+1 (555) 456-7890', image: 'file:///Users/craftnotion/.gemini/antigravity/brain/533300fe-5c74-4c78-9696-5c550eafb3a4/avatar_isha_patel_1774337863283.png', idNormal: '3' },
+            { name: 'Ryan Callahan', phone: '+1 (555) 234-5678', image: 'file:///Users/craftnotion/.gemini/antigravity/brain/533300fe-5c74-4c78-9696-5c550eafb3a4/avatar_ryan_callahan_v2_1774337894779.png', idNormal: '4' },
+            { name: 'Zoe Marchetti', phone: '+1 (555) 345-6789', image: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?q=80&w=200&auto=format&fit=crop', idNormal: '5' }
         ];
         setInviteContactsList(dummyContacts);
         setContactsMatched(dummyContacts);

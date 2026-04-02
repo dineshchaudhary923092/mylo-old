@@ -39,47 +39,35 @@ const GroupsScreen = ({ navigation, socket }) => {
     const getGroupData = async() => {
         setGroupData([
             {
-                id: 1,
-                displayId: 1,
-                displayIdEnc: 'dummy-enc-1',
-                displayName: 'Weekend Crew 🏖️',
-                displayImage: 'https://images.unsplash.com/photo-1511632765486-a01980e01a18?q=80&w=200&auto=format&fit=crop',
-                isOwner: 'yes',
-                lastSeenDetailed: { customFormat: '30m' },
-                message: { text: 'Are we still on for Saturday?', fromUserName: 'You', isOwner: 'yes' },
+                id: 1, displayId: 1, displayIdEnc: 'dummy-enc-1',
+                displayName: 'City Runners Club 🏃', nearbyCount: 3,
+                displayImage: 'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?q=80&w=200&auto=format&fit=crop',
+                isOwner: 'yes', lastSeenDetailed: { customFormat: '15m' },
+                message: { text: "Morning run at Central Park? 5:30 AM crew.", fromUserName: 'Natalie', isOwner: 'no' },
                 messageCount: 0
             },
             {
-                id: 2,
-                displayId: 2,
-                displayIdEnc: 'dummy-enc-2',
-                displayName: 'Design Enthusiasts',
-                displayImage: 'https://images.unsplash.com/photo-1558655146-d09347e92766?q=80&w=200&auto=format&fit=crop',
-                isOwner: 'no',
-                lastSeenDetailed: { customFormat: '2h' },
-                message: { text: 'Check out this glassmorphic layout!', fromUserName: 'Sarah', isOwner: 'no' },
+                id: 2, displayId: 2, displayIdEnc: 'dummy-enc-2',
+                displayName: 'Product Builders', nearbyCount: 5,
+                displayImage: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=200&auto=format&fit=crop',
+                isOwner: 'no', lastSeenDetailed: { customFormat: '45m' },
+                message: { text: 'The feedback from the beta cohort is in.', fromUserName: 'Daniel', isOwner: 'no' },
                 messageCount: 4
             },
             {
-                id: 3,
-                displayId: 3,
-                displayIdEnc: 'dummy-enc-3',
-                displayName: 'Hiker Community 🏔️',
-                displayImage: 'https://images.unsplash.com/photo-1551632811-561732d1e306?q=80&w=200&auto=format&fit=crop',
-                isOwner: 'no',
-                lastSeenDetailed: { customFormat: '1d' },
-                message: { text: 'Trail map shared. See you Sunday!', fromUserName: 'Mike', isOwner: 'no' },
-                messageCount: 2
+                id: 3, displayId: 3, displayIdEnc: 'dummy-enc-3',
+                displayName: 'Rooftop Social 🍸', nearbyCount: 2,
+                displayImage: 'https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?q=80&w=200&auto=format&fit=crop',
+                isOwner: 'no', lastSeenDetailed: { customFormat: '2h' },
+                message: { text: "Reservation confirmed for Friday night!", fromUserName: 'Zoe', isOwner: 'no' },
+                messageCount: 0
             },
             {
-                id: 4,
-                displayId: 4,
-                displayIdEnc: 'dummy-enc-4',
-                displayName: 'Tech Talk JP',
-                displayImage: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?q=80&w=200&auto=format&fit=crop',
-                isOwner: 'no',
-                lastSeenDetailed: { customFormat: '3d' },
-                message: { text: 'New API docs are live now.', fromUserName: 'Yuki', isOwner: 'no' },
+                id: 4, displayId: 4, displayIdEnc: 'dummy-enc-4',
+                displayName: 'Remote & Thriving', nearbyCount: 0,
+                displayImage: 'https://images.unsplash.com/photo-1527192491265-7e15c55b1ed2?q=80&w=200&auto=format&fit=crop',
+                isOwner: 'no', lastSeenDetailed: { customFormat: '6h' },
+                message: { text: 'Best coffee shops in Lisbon? Any leads?', fromUserName: 'Me', isOwner: 'yes' },
                 messageCount: 0
             },
         ]);
@@ -123,20 +111,18 @@ const GroupsScreen = ({ navigation, socket }) => {
 
     const renderGroupItem = ({ item }) => (
         <SwipeRow 
-            rightOpenValue={item.isOwner === 'yes' ? EStyleSheet.value('-174rem') : EStyleSheet.value('-94rem')}
+            rightOpenValue={EStyleSheet.value('-174rem')}
             disableRightSwipe={true}
         >
             <View style={styles.RowBack}>
                 <View style={styles.RowBackActions}>
-                    {item.isOwner === 'yes' && (
                         <TouchableOpacity 
                             style={styles.EditAction}
-                            onPress={() => navigation.navigate('ManageGroup', { type: 'Edit', groupId: item.displayIdEnc })}
+                            onPress={() => navigation.navigate('BuddyGroup', { groupId: item.displayId, cData: item })}
                         >
-                            <Feather name="edit-3" size={24} color="#111214" />
-                            <Text style={styles.EditActionText}>Edit</Text>
+                            <Feather name="info" size={24} color="#111214" />
+                            <Text style={styles.EditActionText}>Info</Text>
                         </TouchableOpacity>
-                    )}
                     <TouchableOpacity 
                         style={styles.DeleteAction} 
                         onPress={() => { SetGroupToRemove(item); bsPop.current.snapTo(0); }}
@@ -164,7 +150,15 @@ const GroupsScreen = ({ navigation, socket }) => {
                     </View>
                     <View style={styles.GroupInfo}>
                         <View style={styles.GroupTop}>
-                            <Text style={styles.GroupName} numberOfLines={1}>{item.displayName}</Text>
+                            <View style={styles.GroupNameRow}>
+                                <Text style={styles.GroupName} numberOfLines={1}>{item.displayName}</Text>
+                                {item.nearbyCount > 0 && (
+                                    <View style={styles.NearbyTag}>
+                                        <Entypo name="location-pin" size={10} color="#7FFFD4" />
+                                        <Text style={styles.NearbyText}>{item.nearbyCount} nearby</Text>
+                                    </View>
+                                )}
+                            </View>
                             <Text style={styles.Timestamp}>{item.lastSeenDetailed.customFormat}</Text>
                         </View>
                         <View style={styles.GroupBottom}>
@@ -228,7 +222,7 @@ const styles = EStyleSheet.create({
     GroupRow: { flexDirection: 'row', alignItems: 'center' },
     AvatarContainer: { position: 'relative' },
     Avatar: { 
-        width: '52rem', height: '52rem', borderRadius: '18rem', 
+        width: '52rem', height: '52rem', borderRadius: '26rem', 
         backgroundColor: 'rgba(255,255,255,0.05)',
         borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.1)'
     },
@@ -240,7 +234,14 @@ const styles = EStyleSheet.create({
     AdminText: { fontSize: '7rem', fontFamily: 'GTWalsheimProBold', color: '#111214', textTransform: 'uppercase' },
     GroupInfo: { flex: 1, marginLeft: '16rem' },
     GroupTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4rem' },
-    GroupName: { fontSize: '17.5rem', fontFamily: 'GTWalsheimProBold', color: '#FFFFFF', flex: 1, marginRight: '8rem' },
+    GroupNameRow: { flex: 1, flexDirection: 'row', alignItems: 'center', marginRight: '8rem' },
+    GroupName: { fontSize: '17.5rem', fontFamily: 'GTWalsheimProBold', color: '#FFFFFF', marginRight: '10rem' },
+    NearbyTag: {
+        flexDirection: 'row', alignItems: 'center',
+        backgroundColor: 'rgba(127,255,212,0.1)', paddingHorizontal: '8rem',
+        paddingVertical: '3rem', borderRadius: '8rem',
+    },
+    NearbyText: { fontSize: '10.5rem', fontFamily: 'GTWalsheimProBold', color: '#7FFFD4', marginLeft: '3rem' },
     Timestamp: { fontSize: '11rem', fontFamily: 'GTWalsheimProRegular', color: 'rgba(255,255,255,0.25)' },
     GroupBottom: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
     LastMessage: { fontSize: '14.5rem', fontFamily: 'GTWalsheimProRegular', color: 'rgba(255,255,255,0.4)', flex: 1, marginRight: '10rem' },

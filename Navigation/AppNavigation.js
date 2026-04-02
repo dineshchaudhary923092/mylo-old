@@ -17,6 +17,8 @@ import BuddyScreen from '../Screens/BuddyScreen';
 import BuddiesScreen from '../Screens/BuddiesScreen';
 import BuddyGroupScreen from '../Screens/BuddyGroupScreen';
 import ImageViewScreen from '../Screens/ImageViewScreen';
+import VideoCallScreen from '../Screens/VideoCallScreen';
+import PhoneCallScreen from '../Screens/PhoneCallScreen';
 import EStyleSheet from 'react-native-extended-stylesheet';
 import { useTheme } from '@react-navigation/native';
 
@@ -45,6 +47,8 @@ const MainScreen = () => {
 			<MainStack.Screen name="ChangePassword" component={ChangePasswordScreen} />
 			<MainStack.Screen name="Notification" component={NotificationScreen} />
 			<MainStack.Screen name="ImageView" component={ImageViewScreen} />
+			<MainStack.Screen name="VideoCall" component={VideoCallScreen} />
+			<MainStack.Screen name="PhoneCall" component={PhoneCallScreen} />
 		</MainStack.Navigator>
 	);
 }

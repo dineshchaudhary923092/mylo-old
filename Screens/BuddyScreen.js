@@ -1,5 +1,7 @@
-import React, { useState , useEffect} from 'react';
-import { Text, View, TouchableOpacity, Dimensions, Image, Switch, ActivityIndicator, Linking, ScrollView, FlatList } from 'react-native';
+import React, { useState , useEffect, useRef } from 'react';
+import { Text, View, TouchableOpacity, Dimensions, Image, Switch, ActivityIndicator, Linking, ScrollView, FlatList, StyleSheet, Animated } from 'react-native';
+import LinearGradient from 'react-native-linear-gradient';
+import Feather from 'react-native-vector-icons/Feather';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '../Constants/Colors';
 import AntDesign from 'react-native-vector-icons/AntDesign';
@@ -13,465 +15,365 @@ import useAxios from '../Hooks/useAxios';
 import { useTheme } from '@react-navigation/native';
 import { getDeviceType } from 'react-native-device-info';
 import EStyleSheet from 'react-native-extended-stylesheet';
+import { BlurView } from "@react-native-community/blur";
+
+const AnimatedBlurView = Animated.createAnimatedComponent(BlurView);
 
 let deviceType = getDeviceType();
 
 const BuddyScreen = ({ navigation, route }) => {
     const insets = useSafeAreaInsets();
-
     const theme = useTheme();
     const { colors } = useTheme();
-
     const isFocused = useIsFocused();
+    
+    // Add scroll tracking for animated header background
+    const scrollY = useRef(new Animated.Value(0)).current;
+
+    const headerOpacity = scrollY.interpolate({
+        inputRange: [0, 50, 90],
+        outputRange: [0, 0.6, 1],
+        extrapolate: 'clamp',
+    });
+
     const [isEnabled, setIsEnabled] = useState(true);
     const [buddyInfo, setBuddyInfo] = useState(null);
     const [mutualGroups, setMutualGroups] = useState(null);
     const [btnText, setBtnText] = useState('Request Location');
-    const [btnBlockText, setBtnBlockText] = useState(null);
+    const [btnBlockText, setBtnBlockText] = useState('Block');
 
     const { id } = route.params;
 
-    const [
-        getData, 
-        responseData, 
-        setResponseData, 
-        responseType, 
-        response, 
-        setResponse, 
-        _getUserData, 
-        userData, 
-        setUserData, 
-        isData
-    ] = useAxios();  
-
     useEffect(() => {
-        if(responseType === 'getBuddy') {
-            // console.log(responseData);
-            if(responseData.error === 1) {
-                const matchLocals = async() => {
-                    await AsyncStorage.getItem('localContacts').then((value) => {
-                        value = value != null ? JSON.parse(value) : null;
-                        for (var i = 0; i < value.length; i++) {
-                            for (var j = 0; j < responseData.data.length; j++) {
-                                // if (value[i].phone.includes(responseData.data[j].phone)) {
-                                //     responseData.data[j].name = value[i].name;
-                                // } 
-                                if (value[i].idNormal == responseData.data[j].idNormal) {
-                                    responseData.data[j].name = value[i].name;
-                                } 
-                            }
-                        }
-                    })
-                    setBuddyInfo(responseData.data);
-                }
-                matchLocals();
-                if(JSON.stringify(responseData.data[0].mutual_groups.length) > 0) {
-                    setMutualGroups(responseData.data[0].mutual_groups);
-                } else {
-                    setMutualGroups('empty');
-                }
-                if(responseData.data[0].location === 'y') {
-                    setIsEnabled(true);
-                } else {
-                    setIsEnabled(false);
-                }
-                if(responseData.data[0].iBlocked === 'no') {
-                    setBtnBlockText('Block')
-                } else {
-                    setBtnBlockText('Unblock')
-                }
-            } else {
-                setResponse(false);
-            }
+        if (isFocused) {
+            getBuddyInfo();
         }
-        if(responseType === 'toggleBuddyLocation') {
-            // console.log(responseData); 
-            if(responseData.error === 1) {
-                setIsEnabled(previousState => !previousState)
-            } else {
-                setResponse(false);
-            }
-        }
-        if(responseType === 'addBuddy') {
-            if(responseData.error === 1) {
-                setBtnText('Requested')
-            } else {
-                setResponse(false);
-            }
-        }
-        if(responseType === 'blockBuddy') {
-            console.log(responseData);
-            if(responseData.error === 1) {
-                setBtnBlockText(responseData.data.button_heading);
-            } else {
-                setResponse(false);
-            }
-        }
-    }, [responseData]);
-
-    useEffect(() => {
-        // getUserData removed - not needed for design showcase
-    }, [])
-
-    // console.log(buddyInfo)
-
-    useEffect(() => {
-        isFocused ? getBuddyInfo() : null
-    }, [isFocused])
+    }, [isFocused]);
 
     const getBuddyInfo = async() => {
+        const personas = {
+            'Natalie Greene': {
+                id: 1,
+                name: 'Natalie Greene',
+                image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=400&auto=format&fit=crop',
+                phone: '+1 (555) 123-4567',
+                distance: '0.8',
+                bio: 'Strategy Lead 🚀 | Marathon runner 🏃‍♀️ | Always looking for the best rooftop matcha.',
+            },
+            'Daniel Okafor': {
+                id: 2,
+                name: 'Daniel Okafor',
+                image: 'file:///Users/craftnotion/.gemini/antigravity/brain/533300fe-5c74-4c78-9696-5c550eafb3a4/avatar_daniel_okafor_1774337845031.png',
+                phone: '+1 (555) 987-6543',
+                distance: '2.4',
+                bio: 'Full-stack developer and UI enthusiast. Pushing pixels by day, building communities by night. 💻✨',
+            },
+            'Isha Patel': {
+                id: 3,
+                name: 'Isha Patel',
+                image: 'file:///Users/craftnotion/.gemini/antigravity/brain/533300fe-5c74-4c78-9696-5c550eafb3a4/avatar_isha_patel_1774337863283.png',
+                phone: '+1 (555) 456-7890',
+                distance: '1.5',
+                bio: 'Product Designer 🎨 | Weekend baker 🍰 | Bibliophile. Currently exploring minimalist design.',
+            },
+            'Ryan Callahan': {
+                id: 4,
+                name: 'Ryan Callahan',
+                image: 'file:///Users/craftnotion/.gemini/antigravity/brain/533300fe-5c74-4c78-9696-5c550eafb3a4/avatar_ryan_callahan_v2_1774337894779.png',
+                phone: '+1 (555) 234-5678',
+                distance: '4.2',
+                bio: 'Backend Engineer ⚙️ | Coffee snob ☕ | On a mission to find the world\'s best tacos. 🌮',
+            },
+            'Zoe Marchetti': {
+                id: 5,
+                name: 'Zoe Marchetti',
+                image: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?q=80&w=400&auto=format&fit=crop',
+                phone: '+1 (555) 345-6789',
+                distance: '3.1',
+                bio: 'Events Specialist 🎪 | Travel photographer 📸 | Capturing the essence of city life, one shot at a time.',
+            }
+        };
+
+        // Attempt to find by name from route params, or fallback to id-based lookup
+        const name = route.params?.cData?.displayName || route.params?.cData?.name || route.params?.name;
+        let selectedPersona = null;
+
+        if (name && personas[name]) {
+            selectedPersona = personas[name];
+        } else {
+            // Fallback to ID map or default
+            const idMap = { 1: 'Natalie Greene', 2: 'Daniel Okafor', 3: 'Isha Patel', 4: 'Ryan Callahan', 5: 'Zoe Marchetti' };
+            selectedPersona = personas[idMap[id] || 'Natalie Greene'];
+        }
+
         setBuddyInfo([{
-            id: id || 1,
-            name: 'Sarah Mitchell',
-            image: null,
-            phone: '+1 (555) 234-8901',
-            distance: '1.2',
+            ...selectedPersona,
             theyBlocked: 'no',
             buddyStatusMine: 'accepted'
         }]);
+
         setMutualGroups([{
-            id: '1',
-            name: 'Weekend Crew 🏖️',
-            image: null,
-            total_buddies: 5
-        }, {
             id: '2',
-            name: 'Hiking Buddies 🏔️',
-            image: null,
+            name: 'Product Builders',
+            image: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=200&auto=format&fit=crop',
+            total_buddies: 12
+        }, {
+            id: '4',
+            name: 'Remote & Thriving',
+            image: 'https://images.unsplash.com/photo-1527192491265-7e15c55b1ed2?q=80&w=200&auto=format&fit=crop',
             total_buddies: 8
         }]);
         setIsEnabled(true);
-        setBtnBlockText('Block');
+    };
+
+    const toggleSwitch = () => setIsEnabled(prev => !prev);
+    const blockBuddy = () => setBtnBlockText(prev => prev === 'Block' ? 'Unblock' : 'Block');
+
+    if (buddyInfo === null) {
+        return (
+            <View style={[styles.Container, { backgroundColor: '#09090B', justifyContent: 'center' }]}>
+                <ActivityIndicator color="#7FFFD4" size="large" />
+            </View>
+        );
     }
 
-    const toggleSwitch = () => {
-        setIsEnabled(previousState => !previousState);
-    }
-
-    const addBuddy = (data) => {
-        setBtnText('Requested');
-    }
-
-    const blockBuddy = (data) => {
-        setBtnBlockText(btnBlockText === 'Block' ? 'Unblock' : 'Block');
-    }
-
-    // console.log(buddyInfo)
+    const buddy = buddyInfo[0];
 
     return (
-        <View style={[styles.Container, {backgroundColor: colors.background}]}>
-            <View style={[styles.TopBarStyle, {paddingTop: insets.top + (deviceType === 'Tablet' ? 8 : 12), backgroundColor: colors.background}]}>
-                <Text style={[styles.TopBarBtnText, {color: colors.pText}]}>Contact Info</Text>
-                <TouchableOpacity onPress={()=> navigation.goBack()} style={styles.BackBtnContainer}>
-                    <AntDesign name="arrowleft" style={[styles.BackBtn, {color: colors.pText}]} />
+        <View style={styles.Container}>
+            <LinearGradient
+                colors={['#0C1A14', '#09090B', '#09090B']}
+                start={{ x: 0.5, y: 0 }}
+                end={{ x: 0.5, y: 0.6 }}
+                style={StyleSheet.absoluteFill}
+            />
+
+            {/* Header */}
+            <View style={[styles.Header, { paddingTop: insets.top + (deviceType === 'Tablet' ? 8 : 12) }]}>
+                {/* Genuine Backdrop Blur Effect */}
+                <AnimatedBlurView 
+                    style={[
+                        StyleSheet.absoluteFill,
+                        {
+                            opacity: headerOpacity,
+                            borderBottomWidth: 1,
+                            borderBottomColor: 'rgba(255, 255, 255, 0.05)',
+                            zIndex: 0
+                        }
+                    ]}
+                    blurType="dark"
+                    blurAmount={20}
+                    reducedTransparencyFallbackColor="#09090B"
+                />
+                <TouchableOpacity onPress={() => navigation.goBack()} style={[styles.HeaderActionBtn, { zIndex: 1 }]}>
+                    <Feather name="chevron-left" size={24} color="#FFFFFF" />
+                </TouchableOpacity>
+                <Text style={[styles.HeaderTitle, { zIndex: 1 }]}>Contact Info</Text>
+                <TouchableOpacity onPress={blockBuddy} style={[styles.HeaderActionBtn, { zIndex: 1 }]}>
+                    <Feather name="more-vertical" size={20} color="#FFFFFF" />
                 </TouchableOpacity>
             </View>
-            <ScrollView style={{flex: 1, marginBottom: EStyleSheet.value('40rem')}} contentContainerStyle={{flexGrow: 1}}>
-                {
-                    buddyInfo === null ?
-                    <View style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}>
-                        <ActivityIndicator color={colors.pText} size='large' />
+
+            <Animated.ScrollView 
+                showsVerticalScrollIndicator={false}
+                onScroll={Animated.event(
+                    [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+                    { useNativeDriver: true }
+                )}
+                scrollEventThrottle={16}
+                contentContainerStyle={{ 
+                    paddingBottom: 60,
+                    paddingTop: insets.top + (deviceType === 'Tablet' ? 70 : 85)
+                }}
+            >
+                {/* Hero Section */}
+                <View style={styles.HeroSection}>
+                    <View style={styles.AvatarContainer}>
+                        <Image source={{ uri: buddy.image }} style={styles.HeroImage} />
+                        <View style={styles.ActiveStatus} />
                     </View>
-                    :
-                    <View style={styles.BuddyWrap}>
-                        <View style={styles.BuddyWrapHeader}>
-                            <TouchableOpacity
-                                onPress={() => {}}
-                            >
-                                <Image 
-                                    source={require('../assets/profile-user.png')} 
-                                    resizeMode='cover' 
-                                    style={styles.BuddyImg}
-                                />
-                            </TouchableOpacity>
-                            <View style={styles.BuddyInfo}>
-                                <Text ellipsizeMode='tail' numberOfLines={1} style={[styles.BuddyName, {color: colors.pText}]}>{buddyInfo[0].name}</Text>
-                                <View style={styles.BuddyEmail}>
-                                    <Text style={{color: colors.light}}>{buddyInfo[0].phone}</Text>
-                                    <Text style={{color: colors.light}}>~{buddyInfo[0].distance} kms away</Text> 
-                                </View>
-                            </View>
+                    <Text style={styles.HeroName}>{buddy.name}</Text>
+                    <Text style={styles.HeroPhone}>{buddy.phone}</Text>
+                    <View style={styles.BadgeRow}>
+                        <View style={styles.DistanceBadge}>
+                            <Feather name="map-pin" size={12} color="#7FFFD4" />
+                            <Text style={styles.BadgeText}>{buddy.distance} km away</Text>
                         </View>
-                        {
-                            buddyInfo[0].theyBlocked === 'yes' ? null :
-                            <View style={styles.BuddyWrapBody}>
-                                {
-                                    buddyInfo[0].buddyStatusMine === 'accepted' ?
-                                    <View style={[styles.BuddyLocation, {borderTopColor: colors.lighter, borderBottomColor: colors.lighter, marginTop: 0}]}>
-                                        <View style={styles.BuddyLocationTextWrap}>
-                                            <FontAwesome
-                                                name="location-arrow"
-                                                style={[styles.BackBtn, {
-                                                    fontSize: 
-                                                    deviceType === 'Tablet' ? 
-                                                    EStyleSheet.value('11rem') :
-                                                    EStyleSheet.value('16rem'), 
-                                                    color: colors.pText
-                                                }]} 
-                                            />
-                                            <Text style={[styles.BuddyLocationText, {color: colors.pText}]}>Location Enable</Text>
-                                        </View>
-                                        <View>
-                                            <Switch
-                                                trackColor={{ false: "#767577", true: Colors.primary }}
-                                                thumbColor={isEnabled ? Colors.dark : "#f4f3f4"}
-                                                ios_backgroundColor="#3e3e3e"
-                                                onValueChange={() => toggleSwitch()}
-                                                value={isEnabled}
-                                            />
-                                        </View>
-                                    </View>
-                                    :
-                                    buddyInfo[0].buddyStatusMine === 'pending' ?
-                                    <View style={[styles.BtnLg, {backgroundColor: colors.bgVar}]}>
-                                        <Text style={[styles.BtnLgText, {color: colors.pText}]}>Location Requested</Text>
-                                    </View> :
-                                    <TouchableOpacity
-                                        onPress={() => {
-                                            if(btnText === 'Request Location') {
-                                                addBuddy(buddyInfo[0])
-                                            }
-                                        }}
-                                    >
-                                        <View style={[styles.BtnLg, {backgroundColor: colors.bgVar}]}>
-                                            <Text style={[styles.BtnLgText, {color: colors.pText}]}>{btnText}</Text>
-                                        </View>
-                                    </TouchableOpacity>
-                                }
-                                <View style={styles.BuddyContact}>
-                                    <View style={[styles.BuddyContactWrap, {borderRightColor: colors.lighter}]}>                                
-                                        <TouchableOpacity 
-                                            style={styles.BuddyContactBtn}
-                                            onPress={() => Linking.openURL(`tel:${+buddyInfo[0].callingcode+buddyInfo[0].phone}`)}
-                                            >
-                                            <Entypo 
-                                                name="phone" 
-                                                style={[styles.BackBtn, {
-                                                    fontSize: 
-                                                    deviceType === 'Tablet' ? 
-                                                    EStyleSheet.value('32rem') :
-                                                    EStyleSheet.value('50rem'), 
-                                                    color: colors.pText
-                                                }]} 
-                                            />
-                                            <Text style={[styles.BuddyContactBtnText, {color: colors.pText}]}>Call</Text>
-                                        </TouchableOpacity>
-                                    </View>
-                                    <View style={[styles.BuddyContactWrap, {borderRightWidth: 0}]}>                                
-                                        <TouchableOpacity style={styles.BuddyContactBtn}
-                                            onPress={() => {
-                                                Linking.openURL('whatsapp://send?text=hello&phone=' + buddyInfo[0].callingcode+buddyInfo[0].phone).then((data) => {
-                                                    console.log('WhatsApp Opened');
-                                                }).catch((err) => {
-                                                    console.log(err);
-                                                });
-                                            }}
-                                        >
-                                            <FontAwesome 
-                                                name="whatsapp" 
-                                                style={[styles.BackBtn, {
-                                                    fontSize: 
-                                                    deviceType === 'Tablet' ? 
-                                                    EStyleSheet.value('32rem') :
-                                                    EStyleSheet.value('50rem'), 
-                                                    color: colors.pText
-                                                }]} 
-                                            />
-                                            <Text style={[styles.BuddyContactBtnText, {color: colors.pText}]}>Message</Text>
-                                        </TouchableOpacity>
-                                    </View>
-                                </View>
-                                {
-                                    mutualGroups === 'empty' ? null :
-                                    <>
-                                        <View style={[styles.BuddyLocation, {borderTopColor: colors.lighter, borderBottomColor: colors.lighter}]}>
-                                            <View style={styles.BuddyLocationTextWrap}>
-                                                <MaterialIcons 
-                                                    name="group" 
-                                                    style={[styles.BackBtn, {
-                                                        fontSize: 
-                                                        deviceType === 'Tablet' ? 
-                                                        EStyleSheet.value('12.5rem') :
-                                                        EStyleSheet.value('18rem'), 
-                                                        color: colors.pText
-                                                    }]} 
-                                                />
-                                                <Text style={[styles.BuddyLocationText, {color: colors.pText}]}>Shared Groups</Text>
-                                            </View>
-                                        </View>
-                                        <FlatList 
-                                            style={styles.ListWrap}
-                                            data={mutualGroups}
-                                            keyExtractor={ (item, index) => item.id ? item.id.toString() : index.toString() }
-                                            renderItem={ ({ item }) => {
-                                                return (
-                                                    <TouchableOpacity 
-                                                        style={[styles.ListItem, {backgroundColor: colors.background, borderBottomColor: colors.lighter}]}
-                                                        onPress={()=> navigation.navigate('BuddyGroup', {
-                                                            groupId: item.id
-                                                        })}
-                                                    >
-                                                        <View style={styles.ListItemBody}>
-                                                            <Image 
-                                                                source={require('../assets/profile-user.png')} 
-                                                                resizeMode='cover' 
-                                                                style={styles.ListItemImg}
-                                                            />
-                                                            <View style={styles.ListItemTextWrap}>
-                                                                <Text style={[styles.ListItemText, {color: colors.pText,}]}>{item.name}</Text>
-                                                                <Text style={[styles.ListItemSmText, {color: colors.light}]}>{item.total_buddies} members</Text>
-                                                            </View>
-                                                        </View>
-                                                    </TouchableOpacity>      
-                                                )
-                                            }}
-                                        />    
-                                    </>
-                                }
+                    </View>
+                </View>
+
+                {/* Main Action Bar */}
+                <View style={styles.ActionBar}>
+                    <TouchableOpacity style={styles.ActionItem} onPress={() => navigation.navigate('PhoneCall', { cData: buddy })}>
+                        <View style={styles.ActionIconWrap}>
+                            <Feather name="phone" size={20} color="#7FFFD4" />
+                        </View>
+                        <Text style={styles.ActionLabel}>Call</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity 
+                        style={styles.ActionItem} 
+                        onPress={() => navigation.navigate('Chat', { cData: buddy, chatType: 'cone' })}
+                    >
+                        <View style={styles.ActionIconWrap}>
+                            <Feather name="message-square" size={20} color="#7FFFD4" />
+                        </View>
+                        <Text style={styles.ActionLabel}>Chat</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.ActionItem} onPress={() => navigation.navigate('VideoCall', { cData: buddy })}>
+                        <View style={styles.ActionIconWrap}>
+                            <Feather name="video" size={20} color="#7FFFD4" />
+                        </View>
+                        <Text style={styles.ActionLabel}>Video</Text>
+                    </TouchableOpacity>
+                </View>
+
+                {/* About/Bio Section */}
+                <View style={styles.SectionCard}>
+                    <Text style={styles.SectionTitle}>About</Text>
+                    <Text style={styles.BioContent}>{buddy.bio}</Text>
+                </View>
+
+                {/* Privacy/Location Settings */}
+                <View style={styles.SectionCard}>
+                    <View style={styles.SettingRow}>
+                        <View style={styles.SettingInfo}>
+                            <View style={[styles.SettingIcon, { backgroundColor: 'rgba(127,255,212,0.1)' }]}>
+                                <Feather name="navigation" size={18} color="#7FFFD4" />
                             </View>
-                        }
-                        <TouchableOpacity
-                            onPress={() => {
-                                if(btnText === 'Request Location') {
-                                    blockBuddy(buddyInfo[0])
-                                }
-                            }}
-                        >
-                            <View style={[styles.BtnLg, {backgroundColor: colors.bgVar}]}>
-                                <Text style={[styles.BtnLgText, {color: 'red'}]}>{btnBlockText}</Text>
+                            <Text style={styles.SettingLabel}>Share My Location</Text>
+                        </View>
+                        <Switch
+                            trackColor={{ false: "#1C1D21", true: "#7FFFD4" }}
+                            thumbColor={isEnabled ? "#09090B" : "#f4f3f4"}
+                            ios_backgroundColor="#1C1D21"
+                            onValueChange={toggleSwitch}
+                            value={isEnabled}
+                        />
+                    </View>
+                    <View style={[styles.SettingRow, { borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.05)', marginTop: 12, paddingTop: 12 }]}>
+                        <View style={styles.SettingInfo}>
+                            <View style={[styles.SettingIcon, { backgroundColor: 'rgba(255,78,78,0.1)' }]}>
+                                <Feather name="slash" size={18} color="#FF4E4E" />
                             </View>
+                            <Text style={[styles.SettingLabel, { color: '#FF4E4E' }]}>{btnBlockText} User</Text>
+                        </View>
+                        <TouchableOpacity onPress={blockBuddy}>
+                            <Feather name="chevron-right" size={20} color="rgba(255,255,255,0.2)" />
                         </TouchableOpacity>
                     </View>
-                }
-            </ScrollView>
+                </View>
+
+                {/* Shared Groups Section */}
+                {mutualGroups !== 'empty' && (
+                    <View style={styles.SectionCard}>
+                        <View style={styles.SectionHeaderRow}>
+                            <Text style={styles.SectionTitle}>Shared Groups</Text>
+                            <Text style={styles.SectionCount}>{mutualGroups?.length}</Text>
+                        </View>
+                        {mutualGroups?.map((group, index) => (
+                            <TouchableOpacity 
+                                key={group.id}
+                                style={[styles.GroupItem, index === 0 && { marginTop: 12 }]}
+                                onPress={() => navigation.navigate('BuddyGroup', { groupId: group.id })}
+                            >
+                                <Image source={{ uri: group.image }} style={styles.GroupThumb} />
+                                <View style={styles.GroupInfo}>
+                                    <Text style={styles.GroupNameText}>{group.name}</Text>
+                                    <Text style={styles.GroupSubText}>{group.total_buddies} members</Text>
+                                </View>
+                                <Feather name="chevron-right" size={18} color="rgba(255,255,255,0.2)" />
+                            </TouchableOpacity>
+                        ))}
+                    </View>
+                )}
+            </Animated.ScrollView>
         </View>
-    )
-}
+    );
+};
 
 const styles = EStyleSheet.create({
-    Container: {
-        flex: 1
+    Container: { flex: 1, backgroundColor: '#09090B' },
+    Header: {
+        flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+        paddingHorizontal: '20rem', paddingBottom: '15rem', zIndex: 10,
+        position: 'absolute', top: 0, left: 0, right: 0,
     },
-    TopBarStyle: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingHorizontal: '20rem',
-        paddingBottom: '14rem',
-        justifyContent: 'center',
-        zIndex: 100,
+    HeaderActionBtn: {
+        width: '40rem', height: '40rem', borderRadius: '20rem',
+        backgroundColor: 'rgba(255,255,255,0.08)', alignItems: 'center', justifyContent: 'center',
+        borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)',
     },
-    BackBtnContainer: {
-        position: 'absolute',
-        left: '20rem',
-        bottom: '14rem',
+    HeaderTitle: { fontSize: '17rem', fontFamily: 'GTWalsheimProBold', color: '#FFFFFF' },
+    
+    HeroSection: { alignItems: 'center', marginTop: '20rem', marginBottom: '30rem' },
+    AvatarContainer: { position: 'relative', marginBottom: '16rem' },
+    HeroImage: { 
+        width: '120rem', height: '120rem', borderRadius: '60rem',
+        borderWidth: 3, borderColor: 'rgba(127,255,212,0.15)',
     },
-    TopBarBtnText: {
-        fontSize: deviceType === 'Tablet' ? '12rem' : '18rem',
-        fontFamily: 'GTWalsheimProMedium',
+    ActiveStatus: {
+        position: 'absolute', bottom: '6rem', right: '6rem',
+        width: '24rem', height: '24rem', borderRadius: '12rem',
+        backgroundColor: '#7FFFD4', borderWidth: 4, borderColor: '#09090B',
     },
-    BackBtn: {
-        fontSize: deviceType === 'Tablet' ? '18rem' : '26rem',
+    HeroName: { fontSize: '26rem', fontFamily: 'GTWalsheimProBold', color: '#FFFFFF' },
+    HeroPhone: { 
+        fontSize: '15rem', fontFamily: 'GTWalsheimProRegular', 
+        color: 'rgba(255,255,255,0.4)', marginTop: '4rem' 
     },
-    BuddyWrap: {
-        flex: 1,
+    BadgeRow: { flexDirection: 'row', marginTop: '12rem' },
+    DistanceBadge: {
+        flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(127,255,212,0.1)',
+        paddingHorizontal: '12rem', paddingVertical: '6rem', borderRadius: '12rem',
+        borderWidth: 1, borderColor: 'rgba(127,255,212,0.15)',
     },
-    BuddyImg: {
-        height: deviceType === 'Tablet' ? '140rem' : '200rem',
-        width: '100%'
+    BadgeText: { fontSize: '13rem', fontFamily: 'GTWalsheimProMedium', color: '#7FFFD4', marginLeft: '6rem' },
+
+    ActionBar: {
+        flexDirection: 'row', justifyContent: 'space-evenly', marginHorizontal: '20rem',
+        backgroundColor: '#121317', paddingVertical: '16rem', borderRadius: '24rem',
+        borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)', marginBottom: '24rem'
     },
-    BuddyInfo: {
-        paddingVertical: deviceType === 'Tablet' ? '10rem' : '14rem',
-        marginHorizontal: deviceType === 'Tablet' ? '14rem' : '20rem',
+    ActionItem: { alignItems: 'center', width: '25%' },
+    ActionIconWrap: {
+        width: '48rem', height: '48rem', borderRadius: '24rem',
+        backgroundColor: 'rgba(255,255,255,0.04)', alignItems: 'center', justifyContent: 'center',
+        marginBottom: '8rem', borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)'
     },
-    BuddyName: {
-        fontSize: deviceType === 'Tablet' ? '12rem' : '18rem',
-        fontFamily: 'GTWalsheimProBold',
+    ActionLabel: { fontSize: '12rem', fontFamily: 'GTWalsheimProMedium', color: 'rgba(255,255,255,0.6)' },
+
+    SectionCard: {
+        backgroundColor: '#121317', marginHorizontal: '20rem', borderRadius: '24rem',
+        padding: '20rem', marginBottom: '16rem', borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)',
     },
-    BuddyEmail: {
-        fontSize: deviceType === 'Tablet' ? '9rem' : '14rem',
-        paddingTop: deviceType === 'Tablet' ? '3.5rem' : '5rem',
-        flexDirection: 'row',
-        justifyContent: 'space-between',
+    SectionHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+    SectionTitle: { fontSize: '16rem', fontFamily: 'GTWalsheimProBold', color: '#FFFFFF' },
+    SectionCount: { 
+        fontSize: '12rem', fontFamily: 'GTWalsheimProBold', color: '#7FFFD4',
+        backgroundColor: 'rgba(127,255,212,0.1)', paddingHorizontal: '8rem', 
+        paddingVertical: '2rem', borderRadius: '8rem' 
     },
-    BuddyLocation: {
-        paddingHorizontal: deviceType === 'Tablet' ? '14rem' : '20rem',
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        borderTopWidth: '1rem',
-        borderBottomWidth: '1rem',
-        marginTop: deviceType === 'Tablet' ? '18rem' : '25rem',
-        height: deviceType === 'Tablet' ? '35rem' : '55rem',
+    BioContent: { 
+        fontSize: '14rem', fontFamily: 'GTWalsheimProRegular', 
+        color: 'rgba(255,255,255,0.5)', marginTop: '8rem', lineHeight: '22rem' 
     },
-    BuddyLocationTextWrap: {
-        flexDirection: 'row',
-        alignItems: 'center'
+
+    SettingRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+    SettingInfo: { flexDirection: 'row', alignItems: 'center' },
+    SettingIcon: {
+        width: '36rem', height: '36rem', borderRadius: '10rem',
+        alignItems: 'center', justifyContent: 'center', marginRight: '14rem'
     },
-    BuddyLocationText: {
-        fontSize: deviceType === 'Tablet' ? '11rem' : '16rem',
-        fontFamily: 'GTWalsheimProMedium',
-        paddingLeft: deviceType === 'Tablet' ? '7rem' : '10rem',
+    SettingLabel: { fontSize: '15rem', fontFamily: 'GTWalsheimProMedium', color: '#FFFFFF' },
+
+    GroupItem: {
+        flexDirection: 'row', alignItems: 'center', paddingVertical: '12rem',
+        borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.05)'
     },
-    BuddyContact: {
-        flexDirection: 'row'
-    },
-    BuddyContactWrap: {
-        width: '50%',
-        height: deviceType === 'Tablet' ? '70rem' : '100rem',
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginTop: deviceType === 'Tablet' ? '18rem' : '30rem',
-        borderRightWidth: '1rem',
-    },
-    BuddyContactBtn: {
-        height: deviceType === 'Tablet' ? '45rem' : '70rem',
-        width: deviceType === 'Tablet' ? '45rem' : '70rem',
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    BuddyContactBtnText: {
-        paddingTop: deviceType === 'Tablet' ? '8rem' : '12rem',
-        fontSize: deviceType === 'Tablet' ? '10rem' : '14rem',
-    },
-    ListItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        borderBottomWidth: '1rem',
-        paddingHorizontal: deviceType === 'Tablet' ? '14rem' : '20rem',
-        height: deviceType === 'Tablet' ? '50rem' : '75rem'
-    },
-    ListItemBody: {
-        flexDirection: 'row',
-        alignItems: 'center'
-    },
-    ListItemImg: {
-        height: deviceType === 'Tablet' ? '30rem' : '42rem',
-        width: deviceType === 'Tablet' ? '30rem' : '42rem',
-        borderRadius: deviceType === 'Tablet' ? '18rem' : '30rem',
-    },
-    ListItemTextWrap: {
-        marginLeft: deviceType === 'Tablet' ? '8rem' : '12rem'
-    },
-    ListItemText: {
-        fontSize: deviceType === 'Tablet' ? '9.5rem' : '14rem',
-        fontFamily: 'GTWalsheimProRegular',
-    },
-    ListItemSmText: {
-        fontSize: deviceType === 'Tablet' ? '8rem' : '12rem',
-        paddingTop: '2rem'
-    },
-    BtnLg: {
-        marginHorizontal: deviceType === 'Tablet' ? '14rem' : '20rem',
-        height: deviceType === 'Tablet' ? '35rem' : '50rem',
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderRadius: '10rem'
-    },
-    BtnLgText: {
-        fontSize: deviceType === 'Tablet' ? '9.5rem' : '16rem',
-        fontFamily: 'GTWalsheimProMedium',
-    }
-})
+    GroupThumb: { width: '48rem', height: '48rem', borderRadius: '24rem', marginRight: '16rem' },
+    GroupInfo: { flex: 1 },
+    GroupNameText: { fontSize: '15rem', fontFamily: 'GTWalsheimProBold', color: '#FFFFFF' },
+    GroupSubText: { fontSize: '12rem', fontFamily: 'GTWalsheimProRegular', color: 'rgba(255,255,255,0.35)', marginTop: '2rem' },
+});
 
 export default BuddyScreen;

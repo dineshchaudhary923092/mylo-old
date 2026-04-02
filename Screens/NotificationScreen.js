@@ -77,9 +77,8 @@ const NotificationScreen = ({navigation, route}) => {
       setNotificationData([
         {
           id: 1,
-          image:
-            'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=200&auto=format&fit=crop',
-          heading: 'James Carter wants to be your buddy',
+          image: 'file:///Users/craftnotion/.gemini/antigravity/brain/533300fe-5c74-4c78-9696-5c550eafb3a4/avatar_daniel_okafor_1774337845031.png',
+          heading: 'Daniel Okafor wants to connect with you',
           timestamp: '5 min ago',
           type: 'request',
           type_id: 101,
@@ -87,9 +86,8 @@ const NotificationScreen = ({navigation, route}) => {
         },
         {
           id: 2,
-          image:
-            'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=200&auto=format&fit=crop',
-          heading: 'Priya Sharma accepted your buddy request',
+          image: 'file:///Users/craftnotion/.gemini/antigravity/brain/533300fe-5c74-4c78-9696-5c550eafb3a4/avatar_isha_patel_1774337863283.png',
+          heading: 'Isha Patel accepted your buddy request',
           timestamp: '1 hr ago',
           type: 'interaction',
           type_id: null,
@@ -97,9 +95,8 @@ const NotificationScreen = ({navigation, route}) => {
         },
         {
           id: 3,
-          image:
-            'https://images.unsplash.com/photo-1599566150163-29194dcaad36?q=80&w=200&auto=format&fit=crop',
-          heading: 'Alex Johnson sent you a location pin',
+          image: 'file:///Users/craftnotion/.gemini/antigravity/brain/533300fe-5c74-4c78-9696-5c550eafb3a4/avatar_ryan_callahan_v2_1774337894779.png',
+          heading: 'Ryan Callahan shared a location pin nearby',
           timestamp: '3 hrs ago',
           type: 'interaction',
           type_id: null,
@@ -107,9 +104,8 @@ const NotificationScreen = ({navigation, route}) => {
         },
         {
           id: 4,
-          image:
-            'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=200&auto=format&fit=crop',
-          heading: 'Sarah M. liked your profile update',
+          image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=200&auto=format&fit=crop',
+          heading: 'Natalie Greene mentioned you in Product Builders',
           timestamp: 'Yesterday',
           type: 'interaction',
           type_id: null,
@@ -139,7 +135,18 @@ const NotificationScreen = ({navigation, route}) => {
         animation="fadeInUp"
         delay={80 + index * 80}
         useNativeDriver>
-        <View
+        <TouchableOpacity
+          activeOpacity={0.9}
+          onPress={() => {
+            if (isRequest) {
+              navigation.navigate('Buddy', { id: item.id });
+            } else {
+              navigation.navigate('Chat', { 
+                chatType: 'cone', 
+                cData: { id: item.id, name: item.heading.split(' ')[0], image: item.image } 
+              });
+            }
+          }}
           style={[
             styles.Card,
             {
@@ -202,7 +209,7 @@ const NotificationScreen = ({navigation, route}) => {
               </View>
             )}
           </View>
-        </View>
+        </TouchableOpacity>
       </Animatable.View>
     );
   };

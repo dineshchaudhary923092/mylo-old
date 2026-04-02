@@ -23,6 +23,7 @@ import Contacts from 'react-native-contacts';
 import { KeyboardAwareScrollView } from '@codler/react-native-keyboard-aware-scroll-view'
 import Feather from 'react-native-vector-icons/Feather';
 import { StyleSheet } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 let deviceType = getDeviceType();
 
@@ -34,6 +35,7 @@ const ManageGroupsScreen = ({ navigation, route }) => {
 
     const theme = useTheme();
     const { colors } = useTheme();
+    const insets = useSafeAreaInsets();
 
     const { logout } = useContext(AuthContext);
     const { type, groupId } = route.params;
@@ -49,7 +51,7 @@ const ManageGroupsScreen = ({ navigation, route }) => {
     const [reRenderList, setReRenderList] = useState(true);
     const [loading, setLoading] = useState(false);
     const [buttonDisabled, setButtonDisabled] = useState(false);
-    const [FirstFetch, setFirstFetch] = useState([]);
+    const [FirstFetch, setFirstFetch] = useState(true);
     const [groupName, setGroupName] = useState({
         gName: '',
         isValid: true
@@ -213,7 +215,7 @@ const ManageGroupsScreen = ({ navigation, route }) => {
     // console.log(allBuddies)
 
     const handleAddBuddy = (buddyId) => {
-        var updatedBuddies = allBuddies;
+        var updatedBuddies = [...allBuddies];
         updatedBuddies.map(value => {
             if (value.id === buddyId) {
                 value.localBtnText === 'add' ?
@@ -223,6 +225,10 @@ const ManageGroupsScreen = ({ navigation, route }) => {
         })
         setAllBuddies(updatedBuddies);
         setReRenderList(!reRenderList);
+    }
+
+    const handleRemoveBuddy = (buddyId) => {
+        handleAddBuddy(buddyId);
     }
 
     const handleManageGroup = async (groupImage, groupName, groupMembers) => {
@@ -297,7 +303,7 @@ const ManageGroupsScreen = ({ navigation, route }) => {
                         scrollEnabled={true}
                         contentContainerStyle={{ paddingBottom: 100 }}
                         ListEmptyComponent={() => (
-                            <View style={{ paddingTop: '40rem' }}>
+                            <View style={{ paddingTop: EStyleSheet.value('40rem') }}>
                                 {allBuddies === null ? (
                                     <ActivityIndicator color="#7FFFD4" size="large" />
                                 ) : (
@@ -381,24 +387,27 @@ const ManageGroupsScreen = ({ navigation, route }) => {
         if(FirstFetch) {
             const dummyContacts = [
                 {
-                    name: 'Sarah Mitchell',
-                    phone: '+1 (555) 234-8901',
-                    image: null,
-                    idNormal: '11',
+                    id: '1',
+                    name: 'Natalie Greene',
+                    phone: '+1 (555) 123-4567',
+                    image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=200&auto=format&fit=crop',
+                    idNormal: '1',
                     localBtnText: 'add'
                 },
                 {
-                    name: 'James Carter',
-                    phone: '+1 (555) 876-3421',
-                    image: null,
-                    idNormal: '22',
+                    id: '2',
+                    name: 'Daniel Okafor',
+                    phone: '+1 (555) 987-6543',
+                    image: 'file:///Users/craftnotion/.gemini/antigravity/brain/533300fe-5c74-4c78-9696-5c550eafb3a4/avatar_daniel_okafor_1774337845031.png',
+                    idNormal: '2',
                     localBtnText: 'add'
                 },
                 {
-                    name: 'Priya Sharma',
-                    phone: '+1 (555) 112-9834',
-                    image: null,
-                    idNormal: '33',
+                    id: '3',
+                    name: 'Isha Patel',
+                    phone: '+1 (555) 456-7890',
+                    image: 'file:///Users/craftnotion/.gemini/antigravity/brain/533300fe-5c74-4c78-9696-5c550eafb3a4/avatar_isha_patel_1774337863283.png',
+                    idNormal: '3',
                     localBtnText: 'add'
                 }
             ];
@@ -459,7 +468,7 @@ const ManageGroupsScreen = ({ navigation, route }) => {
                 enableAutomaticScroll={true}
             >
                 <Animated.View style={{ opacity: Animated.add(0.1, Animated.multiply(fall, 1)), flex: 1 }}>
-                    <View style={styles.Header}>
+                    <View style={[styles.Header, { paddingTop: insets.top + (deviceType === 'Tablet' ? 8 : 12) }]}>
                         <TouchableOpacity 
                             onPress={() => navigation.goBack()}
                             style={styles.HeaderBackBtn}
@@ -576,7 +585,7 @@ const styles = EStyleSheet.create({
     Backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: '#000000', zIndex: 50 },
     Header: {
         flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-        paddingHorizontal: '20rem', paddingTop: '60rem', paddingBottom: '20rem',
+        paddingHorizontal: '20rem', paddingBottom: '15rem',
     },
     HeaderBackBtn: {
         width: '40rem', height: '40rem', borderRadius: '20rem',

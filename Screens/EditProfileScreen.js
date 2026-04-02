@@ -21,6 +21,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import Svg, { Defs, RadialGradient, Rect, Stop } from 'react-native-svg';
 import Feather from 'react-native-vector-icons/Feather';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import OtpInput from '../Components/OtpInput';
 
 let deviceType = getDeviceType();
 
@@ -97,8 +98,8 @@ const EditProfileScreen = ({ navigation }) => {
         }
     }
     
-    const [countryCode, setCountryCode] = useState('IN')
-    const [callingCode, setCallingCode] = useState('91')
+    const [countryCode, setCountryCode] = useState('US')
+    const [callingCode, setCallingCode] = useState('1')
     
     const onSelect = (country) => {
         setCountryCode(country.cca2)
@@ -151,9 +152,9 @@ const EditProfileScreen = ({ navigation }) => {
     useEffect(() => {
         setData({
             ...data,
-            email: 'dummy@example.com',
-            phone: '1234567890',
-            fullname: 'Dummy User',
+            email: 'marcus@mylo.app',
+            phone: '5557778888',
+            fullname: 'Marcus Thorne',
         })
     }, [])
 
@@ -248,25 +249,15 @@ const EditProfileScreen = ({ navigation }) => {
                             <Text style={styles.OtpSubtitle}>Enter the 4-digit code sent to your phone to confirm your profile updates</Text>
                             
                             <View style={styles.CodeInputWrapper}>
-                                <CodeInput
-                                    ref={otpbox}
+                                <OtpInput
                                     codeLength={4}
-                                    secureTextEntry={false}
-                                    activeColor={colors.primary}
-                                    inactiveColor="rgba(255,255,255,0.08)"
-                                    autoFocus={true}
-                                    ignoreCase={true}
-                                    inputPosition='center'
-                                    size={EStyleSheet.value('64rem')}
                                     onFulfill={(code) => {
                                         setShowActivity(true);
                                         setTimeout(() => {
                                             updateProfile(data, code, OTPData, 'dummy-token', callingCode, countryCode);
                                         }, 1000)
                                     }}
-                                    codeInputStyle={styles.otpInputStyle}
-                                    containerStyle={{ height: EStyleSheet.value('90rem') }}
-                                /> 
+                                />
                             </View>
                             
                             {

@@ -4,30 +4,12 @@ import { LogBox, StatusBar, Dimensions, Platform, NativeModules, SafeAreaView, V
 
 LogBox.ignoreLogs(['RCTBridge required dispatch_sync']);
 import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
-import AppNavigation from './Navigation/AppNavigation';
-import AsyncStorage from '@react-native-community/async-storage';
-import { AuthContext } from './Components/Context';
-import { SocketContext } from './Components/SocketContext';
-import SplashScreen from './Screens/SplashScreen';
-import FlashMessage from "react-native-flash-message";
+
 import EStyleSheet from 'react-native-extended-stylesheet';
-import Contacts from 'react-native-contacts';
-import { showMessage } from "react-native-flash-message";
-import { Api } from './Constants/Api';
-const qs = require('qs');
-const axios = require('axios');
-import useTracking from './Hooks/useTracking';
 import { getDeviceType } from 'react-native-device-info';
-import OneSignal from 'react-native-onesignal';
-import NetInfo from "@react-native-community/netinfo";
-import io from "socket.io-client";
-import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context';
 
 let deviceType = getDeviceType();
-
 const {width, height} = Dimensions.get('window');
-
-// Ensure we have non-zero dimensions
 const safeWidth = width || 375;
 const rem = safeWidth / 380;
 const remSm = safeWidth / 400;
@@ -38,6 +20,23 @@ EStyleSheet.build({
 		remTab : 
 		safeWidth > 400 ? rem : remSm,
 });
+
+import AppNavigation from './Navigation/AppNavigation';
+import AsyncStorage from '@react-native-community/async-storage';
+import { AuthContext } from './Components/Context';
+import { SocketContext } from './Components/SocketContext';
+import SplashScreen from './Screens/SplashScreen';
+import FlashMessage from "react-native-flash-message";
+import Contacts from 'react-native-contacts';
+import { showMessage } from "react-native-flash-message";
+import { Api } from './Constants/Api';
+const qs = require('qs');
+const axios = require('axios');
+import useTracking from './Hooks/useTracking';
+import OneSignal from 'react-native-onesignal';
+import NetInfo from "@react-native-community/netinfo";
+import io from "socket.io-client";
+import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context';
 
 const App = () => {
 

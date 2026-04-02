@@ -1,264 +1,214 @@
-import React, { useState, useContext, useEffect } from 'react';
-import { Text, View, TextInput, ActivityIndicator, TouchableOpacity, Dimensions } from 'react-native';
+import React, { useState, useContext } from 'react';
+import {
+    Text, View, TextInput, ActivityIndicator,
+    TouchableOpacity, StatusBar, StyleSheet, Dimensions
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import StatusBarComponent from '../Components/StatusbarComponent';
-import { Colors } from '../Constants/Colors';
-import SimpleLineIcons from 'react-native-vector-icons/SimpleLineIcons';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import Octicons from 'react-native-vector-icons/Octicons';
-import AntDesign from 'react-native-vector-icons/AntDesign';
-import { showMessage } from "react-native-flash-message";
 import { AuthContext } from '../Components/Context';
-import useAxios from '../Hooks/useAxios';
-import { useTheme } from '@react-navigation/native';
 import EStyleSheet from 'react-native-extended-stylesheet';
-import { getDeviceType } from 'react-native-device-info';
 import { KeyboardAwareScrollView } from '@codler/react-native-keyboard-aware-scroll-view';
 import * as Animatable from 'react-native-animatable';
+import LinearGradient from 'react-native-linear-gradient';
+// Svg, Defs, RadialGradient, Rect, Stop removed from react-native-svg as they are now unused
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
-let deviceType = getDeviceType();
+const { width, height } = Dimensions.get('window');
+
+import AuroraBackgroundSVG from '../Components/AuroraBackgroundSVG';
 
 const LoginScreen = ({ navigation }) => {
     const insets = useSafeAreaInsets();
-
-    const theme = useTheme();
-    const { colors } = useTheme();
-
-    const { login, latitude, longitude } = useContext(AuthContext);
-    const [getData, responseData, setResponseData, responseType, response, setResponse] = useAxios();  
+    const { login } = useContext(AuthContext);
     const [buttonDisabled, setButtonDisabled] = useState(false);
+    const [secureText, setSecureText] = useState(true);
+    const [focused, setFocused] = useState(null);
+    const [data, setData] = useState({ username: '', password: '' });
 
-    const [data, setData] = useState({
-		username: '',
-		password: '',
-		isUserValid: true,
-        isPasswordValid: true,
-        secureTextEntry: true,
-    });
-
-    const usernameInputChange = (value) => {
-        setData({
-            ...data,
-            username: value,
-            isUserValid: value.length >= 4
-        })
-	}
-    
-    const passwordInputChange = (value) => {
-        setData({
-            ...data,
-            password: value,
-            isPasswordValid: value.length >= 6
-        })
-    }
-    
-    const handleSecureTextEntry = () => {
-		setData({
-            ...data,
-			secureTextEntry: !data.secureTextEntry
-		})
-    }
-    
-    const loginHandle = async() => {
+    const loginHandle = () => {
         setButtonDisabled(true);
         setTimeout(() => {
             login({
-                error: 1,
-                token: 'dummy-token',
+                error: 1, token: 'dummy-token',
                 data: {
                     user: {
-                        id: 1,
-                        username: data.username,
-                        first_name: 'Showcase',
-                        last_name: 'User',
-                        device_type: 'ios',
-                        status: 'active'
+                        id: 1, username: data.username,
+                        first_name: 'Showcase', last_name: 'User',
+                        device_type: 'ios', status: 'active',
                     }
                 }
             });
             setButtonDisabled(false);
         }, 1000);
-    }
+    };
 
     return (
-        <View style={{flex: 1, backgroundColor: colors.background}}>
-            <StatusBarComponent bgColor={colors.background} barStyle={theme.dark ? 'light' : 'dark'} />
-            <KeyboardAwareScrollView 
-                style={styles.ContainerStyle} 
-                keyboardShouldPersistTaps='always'
-                enableOnAndroid={true}
-                contentContainerStyle={{flexGrow: 1}}
+        <View style={s.Root}>
+            <StatusBar translucent backgroundColor="transparent" barStyle="light-content" />
+            <AuroraBackgroundSVG />
+
+            <KeyboardAwareScrollView
+                style={{ flex: 1 }}
+                keyboardShouldPersistTaps="always"
+                enableOnAndroid
+                contentContainerStyle={{ flexGrow: 1 }}
             >
-                <Animatable.View animation="fadeIn" duration={1000} style={[styles.InnerContainer, {paddingTop: insets.top + 40}]}>
-                    <Animatable.View animation="fadeInDown" delay={200}>
-                        <Text style={[styles.TextLg, {color: colors.text}]}>Hello Again!</Text>
-                        <Text style={[styles.TextSm, {color: colors.light}]}>Sign in to your account to continue</Text>
+                <View style={[s.Screen, { paddingTop: insets.top + 16, paddingBottom: insets.bottom + 32 }]}>
+
+                    <TouchableOpacity style={s.BackBtn} onPress={() => navigation.goBack()}>
+                        <Ionicons name="chevron-back-outline" size={22} color="rgba(255,255,255,0.8)" />
+                    </TouchableOpacity>
+
+                    {/* Logo + Title */}
+                    <Animatable.View animation="fadeInDown" delay={100} duration={600} style={s.TopSection}>
+                        <Text style={s.Title}>Sign In</Text>
+                        <Text style={s.Subtitle}>Welcome back — you've been missed.</Text>
                     </Animatable.View>
 
-                    <View style={styles.FormContainer}>
-                        <Animatable.View animation="fadeInUp" delay={400} style={styles.FormInputStyle}>
-                            <Text style={[styles.FormInputLabelStyle, {color: colors.text}]}>Email or Username</Text>
-                            <View style={[styles.FormInputFieldStyle, {backgroundColor: colors.bgVar, borderColor: data.isUserValid ? colors.lighter : '#ff4444'}]}>
-                                <SimpleLineIcons name="user" size={18} color={colors.pText} style={styles.IconStyle} />
-                                <TextInput
-                                    autoCapitalize='none'
-                                    autoCorrect={false}
-                                    style={[styles.FormTextInputStyle, {color: colors.text}]}
-                                    placeholder="Enter username"
-                                    placeholderTextColor={colors.light}
-                                    keyboardAppearance="dark"
-                                    onChangeText={(value) => usernameInputChange(value)}
-                                />
-                                {data.isUserValid && data.username.length > 0 && (
-                                    <Octicons name="verified" size={15} color={colors.primary} style={{alignSelf: 'center'}} />
-                                )}
-                            </View>
-                        </Animatable.View>
+                    {/* Form */}
+                    <Animatable.View animation="fadeInUp" delay={220} duration={600} style={s.Form}>
 
-                        <Animatable.View animation="fadeInUp" delay={600} style={styles.FormInputStyle}>
-                            <Text style={[styles.FormInputLabelStyle, {color: colors.text}]}>Password</Text>
-                            <View style={[styles.FormInputFieldStyle, {backgroundColor: colors.bgVar, borderColor: data.isPasswordValid ? colors.lighter : '#ff4444'}]}>
-                                <MaterialIcons name="lock-outline" size={20} color={colors.pText} style={styles.IconStyle} />
+                        <View style={s.FieldGroup}>
+                            <Text style={s.Label}>Email or Username</Text>
+                            <View style={[s.Field, focused === 'user' && s.FieldFocused]}>
+                                <Ionicons name="person-outline" size={18} color={focused === 'user' ? '#7FFFD4' : 'rgba(255,255,255,0.25)'} style={s.Icon} />
                                 <TextInput
-                                    autoCapitalize='none'
+                                    style={s.Input}
+                                    placeholder="Enter username or email"
+                                    placeholderTextColor="rgba(255,255,255,0.22)"
+                                    autoCapitalize="none"
                                     autoCorrect={false}
-                                    secureTextEntry={data.secureTextEntry}
-                                    style={[styles.FormTextInputStyle, {color: colors.text}]}
                                     keyboardAppearance="dark"
-                                    placeholderTextColor={colors.light}
-                                    placeholder="Enter password"
-                                    onChangeText={(value) => passwordInputChange(value)}
+                                    onFocus={() => setFocused('user')}
+                                    onBlur={() => setFocused(null)}
+                                    onChangeText={(v) => setData({ ...data, username: v })}
                                 />
-                                <TouchableOpacity onPress={handleSecureTextEntry} style={styles.EyeStyle}>
-                                    <MaterialCommunityIcons 
-                                        name={data.secureTextEntry ? "eye-off" : "eye"} 
-                                        size={20} 
-                                        color={colors.pText} 
-                                    />
+                                {data.username.length > 3 && <Ionicons name="checkmark-circle" size={16} color="#7FFFD4" />}
+                            </View>
+                        </View>
+
+                        <View style={s.FieldGroup}>
+                            <View style={s.LabelRow}>
+                                <Text style={s.Label}>Password</Text>
+                                <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')}>
+                                    <Text style={s.ForgotLink}>Forgot Password?</Text>
                                 </TouchableOpacity>
                             </View>
-                            <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')} style={{alignSelf: 'flex-end', marginTop: 10}}>
-                                <Text style={[styles.ForgotStyle, {color: colors.primary}]}>Forgot Password?</Text>
-                            </TouchableOpacity>
-                        </Animatable.View>
+                            <View style={[s.Field, focused === 'pass' && s.FieldFocused]}>
+                                <Ionicons name="lock-closed-outline" size={18} color={focused === 'pass' ? '#7FFFD4' : 'rgba(255,255,255,0.25)'} style={s.Icon} />
+                                <TextInput
+                                    style={s.Input}
+                                    placeholder="Enter password"
+                                    placeholderTextColor="rgba(255,255,255,0.22)"
+                                    secureTextEntry={secureText}
+                                    autoCapitalize="none"
+                                    keyboardAppearance="dark"
+                                    onFocus={() => setFocused('pass')}
+                                    onBlur={() => setFocused(null)}
+                                    onChangeText={(v) => setData({ ...data, password: v })}
+                                />
+                                <TouchableOpacity onPress={() => setSecureText(!secureText)}>
+                                    <Ionicons name={secureText ? "eye-off-outline" : "eye-outline"} size={20} color="rgba(255,255,255,0.3)" />
+                                </TouchableOpacity>
+                            </View>
+                        </View>
 
-                        <Animatable.View animation="fadeInUp" delay={800} style={{marginTop: 20}}>
-                            <TouchableOpacity 
-                                activeOpacity={0.8}
-                                style={[styles.SubmitBtn, {backgroundColor: colors.primary}]}
-                                onPress={loginHandle}
-                                disabled={buttonDisabled}
+                        {/* CTA */}
+                        <TouchableOpacity activeOpacity={0.88} onPress={loginHandle} disabled={buttonDisabled} style={{ marginTop: EStyleSheet.value('8rem') }}>
+                            <LinearGradient
+                                colors={['#7FFFD4', '#3ECFA4']}
+                                start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+                                style={s.SubmitBtn}
                             >
-                                {buttonDisabled ? (
-                                    <ActivityIndicator color={Colors.dark} />
-                                ) : (
-                                    <View style={styles.SubmitBtnInner}>
-                                        <Text style={[styles.SubmitBtnText, {color: Colors.dark}]}>Sign In</Text>
-                                        <AntDesign name="arrowright" size={20} color={Colors.dark} />
-                                    </View>
-                                )}
-                            </TouchableOpacity>
-                        </Animatable.View>
-                    </View>
+                                {buttonDisabled
+                                    ? <ActivityIndicator color="#060D0A" />
+                                    : <><Text style={s.SubmitText}>Sign In</Text><Ionicons name="arrow-forward" size={20} color="#060D0A" /></>
+                                }
+                            </LinearGradient>
+                        </TouchableOpacity>
+                    </Animatable.View>
 
-                    <Animatable.View animation="fadeInUp" delay={1000} style={styles.SignUpArea}>
+                    <Animatable.View animation="fadeIn" delay={500} style={s.Footer}>
                         <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
-                            <Text style={[styles.SignUpButtonText, {color: colors.text}]}>
-                                New here? <Text style={{fontFamily: 'GTWalsheimProBold', color: colors.primary}}>Create Account</Text>
+                            <Text style={s.FooterText}>
+                                Don't have an account?{'  '}<Text style={s.FooterLink}>Create one</Text>
                             </Text>
                         </TouchableOpacity>
                     </Animatable.View>
-                </Animatable.View>
+
+                </View>
             </KeyboardAwareScrollView>
         </View>
-    )
-}
+    );
+};
 
-const styles = EStyleSheet.create({
-    ContainerStyle: {
-        flex: 1,
+const s = EStyleSheet.create({
+    Root: { flex: 1, backgroundColor: '#09090B' },
+    Screen: { flex: 1, paddingHorizontal: '24rem' },
+
+    BackBtn: {
+        width: '40rem', height: '40rem', borderRadius: '13rem',
+        backgroundColor: 'rgba(255,255,255,0.05)',
+        borderWidth: 1, borderColor: 'rgba(255,255,255,0.09)',
+        alignItems: 'center', justifyContent: 'center',
+        marginBottom: '44rem',
     },
-    InnerContainer: {
-        paddingHorizontal: '25rem',
-        paddingVertical: '60rem',
-        justifyContent: 'center',
+
+    TopSection: { marginBottom: '40rem' },
+    Title: {
+        fontSize: '38rem', fontFamily: 'GTWalsheimProBold',
+        color: '#FFFFFF', letterSpacing: '-0.5rem', marginBottom: '8rem',
     },
-    TextLg: {
-        fontSize: '32rem',
-        fontFamily: 'GTWalsheimProBold',
-        marginBottom: '6rem',
+    Subtitle: {
+        fontSize: '15rem', fontFamily: 'GTWalsheimProRegular',
+        color: 'rgba(255,255,255,0.38)',
     },
-    TextSm: {
-        fontSize: '15rem',
-        fontFamily: 'GTWalsheimProLight',
-        marginBottom: '40rem',
+
+    Form: {},
+    FieldGroup: { marginBottom: '20rem' },
+    LabelRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10rem' },
+    Label: {
+        fontSize: '13rem', fontFamily: 'GTWalsheimProMedium',
+        color: 'rgba(255,255,255,0.5)', marginBottom: '10rem',
     },
-    FormContainer: {
-        width: '100%',
+    ForgotLink: {
+        fontSize: 13, fontFamily: 'GTWalsheimProMedium', color: '#7FFFD4',
     },
-    FormInputStyle: {
-		marginBottom: '20rem',
-	},
-	FormInputLabelStyle: {
-		fontSize: '14rem',
-		fontFamily: 'GTWalsheimProMedium',
-        marginBottom: '10rem',
-        opacity: 0.9,
-	},
-	FormInputFieldStyle: {
-		flexDirection: 'row',
-		borderWidth: '1rem',
-        height: '52rem',
+
+    Field: {
+        flexDirection: 'row', alignItems: 'center',
+        backgroundColor: 'rgba(255,255,255,0.05)',
         borderRadius: '14rem',
-        paddingHorizontal: '15rem',
-        alignItems: 'center',
-	},
-	FormTextInputStyle: {
-        flex: 1,
+        borderWidth: 1, borderColor: 'rgba(255,255,255,0.09)',
+        height: '54rem', paddingHorizontal: '16rem',
+    },
+    FieldFocused: {
+        backgroundColor: 'rgba(127,255,212,0.06)',
+        borderColor: 'rgba(127,255,212,0.45)',
+    },
+    Icon: { marginRight: '12rem' },
+    Input: {
+        flex: 1, color: '#FFFFFF',
+        fontSize: '15.5rem', fontFamily: 'GTWalsheimProRegular',
         height: '100%',
-        fontSize: '15rem',
-        fontFamily: 'GTWalsheimProRegular',
     },
-    IconStyle: {
-        marginRight: '12rem',
-        opacity: 0.7
-    },
-    EyeStyle: {
-        padding: '5rem',
-    },
+
     SubmitBtn: {
-        height: '55rem',
-        borderRadius: '16rem',
-        alignItems: 'center',
-        justifyContent: 'center',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
-        elevation: 5
+        height: '56rem', borderRadius: '18rem',
+        flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+        shadowColor: '#7FFFD4', shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.28, shadowRadius: 18,
     },
-    SubmitBtnInner: {
-        flexDirection: 'row',
-        alignItems: 'center',
+    SubmitText: {
+        fontSize: '17rem', fontFamily: 'GTWalsheimProBold',
+        color: '#060D0A', marginRight: '10rem',
     },
-    SubmitBtnText: {
-        fontSize: '17rem',
-        fontFamily: 'GTWalsheimProBold',
-        marginRight: '10rem',
+
+    Footer: { alignItems: 'center', marginTop: '40rem' },
+    FooterText: {
+        fontSize: '15rem', fontFamily: 'GTWalsheimProRegular',
+        color: 'rgba(255,255,255,0.35)',
     },
-    ForgotStyle: {
-        fontSize: '14rem',
-		fontFamily: 'GTWalsheimProMedium',
-    },
-    SignUpArea: {
-        marginTop: '40rem',
-        alignItems: 'center',
-    },
-    SignUpButtonText: {
-        fontSize: '15rem',
-        fontFamily: 'GTWalsheimProRegular',
-    },
+    FooterLink: { fontFamily: 'GTWalsheimProBold', color: '#7FFFD4' },
 });
 
 export default LoginScreen;
-
